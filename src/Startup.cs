@@ -37,18 +37,18 @@ namespace LexisDesk {
         public bool WasClosed {get;private set;}
         public event Action<double> ProgressReported;
         public SplashWindow() {
-            Title="词间 · 正在启动";Icon=AppAssets.Icon;Width=560;Height=480;ResizeMode=ResizeMode.NoResize;WindowStyle=WindowStyle.None;
+            Title="world speace · 正在启动";Icon=AppAssets.Icon;Width=560;Height=480;ResizeMode=ResizeMode.NoResize;WindowStyle=WindowStyle.None;
             AllowsTransparency=true;Background=Brushes.Transparent;WindowStartupLocation=WindowStartupLocation.CenterScreen;ShowInTaskbar=true;
             FontFamily=new FontFamily("Microsoft YaHei UI, Segoe UI");
             UseLayoutRounding=true;SnapsToDevicePixels=true;TextOptions.SetTextFormattingMode(this,TextFormattingMode.Display);
             using(var stream=Assembly.GetExecutingAssembly().GetManifestResourceStream("Theme.xaml"))Resources=(ResourceDictionary)System.Windows.Markup.XamlReader.Load(stream);
             var panel=new Grid{Margin=new Thickness(18)};
             Glass=new LiquidGlassPanel();panel.Children.Add(Glass);
-            var brand=Label("L E X I S  /  O F F L I N E",9,"#496F60",new Thickness(0,25,0,0));brand.VerticalAlignment=VerticalAlignment.Top;panel.Children.Add(brand);
+            var brand=Label("O F F L I N E  /  W O R D S",9,"#496F60",new Thickness(0,25,0,0));brand.VerticalAlignment=VerticalAlignment.Top;panel.Children.Add(brand);
             var content=new StackPanel{VerticalAlignment=VerticalAlignment.Center,HorizontalAlignment=HorizontalAlignment.Center,Width=350,Margin=new Thickness(0,18,0,0)};
             var image=new Image{Source=AppAssets.Icon};
             RenderOptions.SetBitmapScalingMode(image,BitmapScalingMode.HighQuality);icon=image;IconGlass=new GlassIconFrame(image);content.Children.Add(IconGlass);
-            content.Children.Add(Label("词 间",29,"#163B31",new Thickness(0,21,0,7),true));
+            content.Children.Add(Label("world speace",29,"#163B31",new Thickness(0,21,0,7),true));
             content.Children.Add(Label("每次记住一点点。",13,"#4C6A5F",new Thickness(0,0,0,29)));
             progress=new ProgressBar{Minimum=0,Maximum=100,Value=0,Height=10,Width=284,IsIndeterminate=false,Style=(Style)FindResource("GlassProgress")};
             content.Children.Add(progress);

@@ -1,12 +1,12 @@
-# 词间 · Windows 单机词汇学习
+# world speace · Windows 单机词汇学习
 
 一个无需账号和安卓模拟器的 Windows 桌面背词程序。词库、学习记录、收藏和复习安排均保存在本机，日常学习无需联网。
 
-当前版本：**v1.3.0**。程序基于 C# / WPF / .NET Framework 4.8 独立实现，并非“不背单词”官方客户端，也不包含原应用的账号、付费词典或影视原声。
+当前版本：**v1.3.1**。程序基于 C# / WPF / .NET Framework 4.8 独立实现，并非“不背单词”官方客户端，也不包含原应用的账号、付费词典或影视原声。
 
 ## 下载与运行
 
-前往 [Releases 下载页面](https://github.com/yhc904444-eng/cijian-windows/releases/latest)，下载 `Cijian_Windows_v1.3.0.zip`，完整解压到有写入权限的文件夹，然后双击 `词间.exe`。
+前往 [Releases 下载页面](https://github.com/yhc904444-eng/world-speace/releases/latest)，下载 `world-speace_Windows_v1.3.1.zip`，完整解压到有写入权限的文件夹，然后双击 `world speace.exe`。
 
 支持安装有 .NET Framework 4.8 的 Windows 10 / 11。运行发行包不需要安装 Python、Node.js、Java 或开发工具。
 
@@ -64,12 +64,12 @@
 .\build.ps1
 ```
 
-程序输出到 `dist/词间.exe`。内置词库与图标已经包含在源码中，普通构建不需要下载数据或安装第三方包。
+程序输出到 `dist/world speace.exe`。内置词库与图标已经包含在源码中，普通构建不需要下载数据或安装第三方包。
 
 开发验证入口：
 
 ```powershell
-$app = Join-Path $PWD 'dist\词间.exe'
+$app = Join-Path $PWD 'dist\world speace.exe'
 Start-Process -FilePath $app -ArgumentList '--self-test' -Wait
 Start-Process -FilePath $app -ArgumentList '--exclusion-tests' -Wait
 Start-Process -FilePath $app -ArgumentList '--navigation-tests' -Wait

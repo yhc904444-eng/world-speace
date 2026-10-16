@@ -38,7 +38,7 @@ namespace LexisDesk {
         int cardSequence;
         public bool ThrowOnError;
         public MainWindow(Store store) {
-            Store=store;Title="词间 · 单机词汇学习";Icon=AppAssets.Icon;Width=1240;Height=840;MinWidth=1040;MinHeight=720;
+            Store=store;Title="world speace · 单机词汇学习";Icon=AppAssets.Icon;Width=1240;Height=840;MinWidth=1040;MinHeight=720;
             WindowStartupLocation=WindowStartupLocation.CenterScreen;
             FontFamily=new FontFamily("Microsoft YaHei UI, Segoe UI");FontSize=14;
             UseLayoutRounding=true;SnapsToDevicePixels=true;
@@ -97,9 +97,9 @@ namespace LexisDesk {
             var backdrop=new PageGlassBackdrop();Grid.SetColumnSpan(backdrop,2);shell.Children.Add(backdrop);
             var sidebar=new Grid();sidebar.RowDefinitions.Add(new RowDefinition{Height=GridLength.Auto});sidebar.RowDefinitions.Add(new RowDefinition());sidebar.RowDefinitions.Add(new RowDefinition{Height=GridLength.Auto});
             var sidebarSurface=new Border{CornerRadius=new CornerRadius(0,22,22,0)};Paint(sidebarSurface,Border.BackgroundProperty,"SidebarFill");Paint(sidebarSurface,Border.BorderBrushProperty,"CardEdge");sidebarSurface.SetResourceReference(Border.BorderThicknessProperty,"CardStroke");Grid.SetRowSpan(sidebarSurface,3);sidebar.Children.Add(sidebarSurface);
-            var brand=Stack(Text("词 间",29,"OnAccent",true),Text("LEXIS  /  OFFLINE",10,"NavMuted"));brand.Margin=new Thickness(28,32,20,34);sidebar.Children.Add(brand);
+            var brand=Stack(Text("world speace",22,"OnAccent",true),Text("OFFLINE VOCABULARY",10,"NavMuted"));brand.Margin=new Thickness(28,32,20,34);sidebar.Children.Add(brand);
             nav=new StackPanel{Margin=new Thickness(14,0,12,0)};Grid.SetRow(nav,1);sidebar.Children.Add(nav);
-            var foot=Stack(Text("每次记住一点点。",14,"NavMuted"),Text("独立单机版  v1.3.0\n学习记录只保存在本机",11,"NavMuted"));foot.Margin=new Thickness(26,24,16,28);Grid.SetRow(foot,2);sidebar.Children.Add(foot);
+            var foot=Stack(Text("每次记住一点点。",14,"NavMuted"),Text("独立单机版  v1.3.1\n学习记录只保存在本机",11,"NavMuted"));foot.Margin=new Thickness(26,24,16,28);Grid.SetRow(foot,2);sidebar.Children.Add(foot);
             shell.Children.Add(sidebar);
             var main=new Grid{Margin=new Thickness(36,27,32,15)};main.RowDefinitions.Add(new RowDefinition{Height=GridLength.Auto});main.RowDefinitions.Add(new RowDefinition());main.RowDefinitions.Add(new RowDefinition{Height=GridLength.Auto});
             var top=new DockPanel{Margin=Gap(0,24)};var date=Text(DateTime.Now.ToString("yyyy年M月d日  dddd",new CultureInfo("zh-CN")),12,"Muted");DockPanel.SetDock(date,Dock.Right);top.Children.Add(date);top.Children.Add(Text("给记忆留一点空间",12,"Muted"));main.Children.Add(top);
@@ -266,7 +266,7 @@ namespace LexisDesk {
             var prefs=Stack(Text("每日新词目标",16,null,true),WithMargin(target,14,0),auto,Text("离线英语语音",13,"Muted"),WithMargin(voice,10,20));prefs.Children.Add(Row(Button("保存设置",()=>{Store.Data.DailyTarget=(int)target.SelectedItem;Store.Data.AutoSpeak=auto.IsChecked==true;Store.Data.Voice=voice.SelectedIndex>0?(string)voice.SelectedItem:null;Store.Save();status.Text="设置已保存。";},true),Button("试听",()=>{Store.Data.Voice=voice.SelectedIndex>0?(string)voice.SelectedItem:null;Speak("A little progress every day.");})));p.Children.Add(Card(prefs));
             var backup=Stack(Text("给进度留一份备份",18,null,true),WithMargin(Text("导出的 JSON 包含学习记录、收藏、设置和自制词书。恢复会替换当前数据，软件会先保留恢复前的副本。",13,"Muted"),10,20),Row(Button("导出完整备份",Backup,true),Button("恢复备份",Restore)));var backupCard=Card(backup);backupCard.Margin=Gap(20,20);p.Children.Add(backupCard);
             p.Children.Add(Text("数据文件夹",12,"Muted"));p.Children.Add(WithMargin(new TextBox{Text=Store.DirectoryPath,IsReadOnly=true,FontSize=12},8,18));
-            p.Children.Add(Text("关于这个版本",16,null,true));p.Children.Add(WithMargin(Text("词间 1.3.0 · 根据单机学习需求独立制作，并非不背单词官方客户端。\n内置词库：ECDICT（MIT 许可）。不包含原应用账号、云端学习记录、影视原声和付费词典。\n内置词条提供释义与词形；双语例句可随自制词书导入。发音使用 Windows 本地英语语音。\n词表来源、筛选规则和许可证随发行包提供。",12,"Muted"),10,18));body.Content=Scroll(p);
+            p.Children.Add(Text("关于这个版本",16,null,true));p.Children.Add(WithMargin(Text("world speace 1.3.1 · 根据单机学习需求独立制作，并非不背单词官方客户端。\n内置词库：ECDICT（MIT 许可）。不包含原应用账号、云端学习记录、影视原声和付费词典。\n内置词条提供释义与词形；双语例句可随自制词书导入。发音使用 Windows 本地英语语音。\n词表来源、筛选规则和许可证随发行包提供。",12,"Muted"),10,18));body.Content=Scroll(p);
         }
         public void RefreshAppearance(){Appearance.Apply(Resources,Store.Data);}
         UIElement AppearanceOptions() {
@@ -283,8 +283,8 @@ namespace LexisDesk {
             palette.SelectionChanged+=delegate{apply();};style.SelectionChanged+=delegate{apply();};
             var card=Card(Stack(Text("外观与配色",18,null,true),WithMargin(Text("喜欢透亮的玻璃质感，或更安静的纯色页面，都由你选择。",13,"Muted"),9,0),choices,Text("选择后立即生效并自动保存，无需重启。",12,"Muted")));card.Margin=Gap(0,20);return card;
         }
-        void Backup(){var d=new SaveFileDialog{FileName="词间备份-"+DateTime.Now.ToString("yyyyMMdd")+".json",Filter="JSON 备份|*.json"};if(d.ShowDialog(this)==true){JsonIO.Write(d.FileName,Store.Data);status.Text="完整备份已导出。";}}
-        void Restore(){var d=new OpenFileDialog{Filter="JSON 备份|*.json",Title="选择词间备份"};if(d.ShowDialog(this)!=true)return;Store.Validate(JsonIO.Read<UserData>(d.FileName));if(MessageBox.Show(this,"将用备份替换当前学习记录、收藏和自制词书。恢复前的记录会自动另存副本。继续吗？","恢复学习记录",MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes)return;Store.Restore(d.FileName);RefreshAppearance();ShowSettings();status.Text="备份已恢复。";}
+        void Backup(){var d=new SaveFileDialog{FileName="world speace 备份-"+DateTime.Now.ToString("yyyyMMdd")+".json",Filter="JSON 备份|*.json"};if(d.ShowDialog(this)==true){JsonIO.Write(d.FileName,Store.Data);status.Text="完整备份已导出。";}}
+        void Restore(){var d=new OpenFileDialog{Filter="JSON 备份|*.json",Title="选择world speace备份"};if(d.ShowDialog(this)!=true)return;Store.Validate(JsonIO.Read<UserData>(d.FileName));if(MessageBox.Show(this,"将用备份替换当前学习记录、收藏和自制词书。恢复前的记录会自动另存副本。继续吗？","恢复学习记录",MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes)return;Store.Restore(d.FileName);RefreshAppearance();ShowSettings();status.Text="备份已恢复。";}
         public void RenderTo(string path){UpdateLayout();if(Motion.Enabled)Motion.Pump(365);var element=(FrameworkElement)Content;int width=Math.Max(1,(int)Math.Ceiling(element.ActualWidth)),height=Math.Max(1,(int)Math.Ceiling(element.ActualHeight));var image=new RenderTargetBitmap(width,height,96,96,PixelFormats.Pbgra32);image.Render(element);var png=new PngBitmapEncoder();png.Frames.Add(BitmapFrame.Create(image));using(var f=File.Create(path))png.Save(f);}
         public void TestSpelling(string answer){spellBox.Text=answer;CheckSpelling();}
     }
@@ -307,20 +307,20 @@ namespace LexisDesk {
                 if(args.Contains("--motion-tests")){MotionTests.Run(root,app);return 0;}
                 if(args.Contains("--appearance-tests")){AppearanceTests.Run(root,app);return 0;}
                 bool created;using(var mutex=new System.Threading.Mutex(true,"Local\\LexisDesk_"+StableHash(data),out created)){
-                    if(!created){trace("same data directory is already open");if(startupProbe)return 2;MessageBox.Show("这个数据文件夹已有词间正在运行，请使用已打开的窗口。","词间");return 0;}
+                    if(!created){trace("same data directory is already open");if(startupProbe)return 2;MessageBox.Show("这个数据文件夹已有 world speace 正在运行，请使用已打开的窗口。","world speace");return 0;}
                     MainWindow window=null;var splash=new SplashWindow();app.ShutdownMode=ShutdownMode.OnExplicitShutdown;
                     if(startupProbe)splash.ProgressReported+=value=>trace("progress "+value.ToString("0"));
-                    app.DispatcherUnhandledException+=delegate(object s,DispatcherUnhandledExceptionEventArgs e){var active=app.MainWindow as MainWindow??window;if(active!=null)active.HandleError(e.Exception);else MessageBox.Show(e.Exception.Message,"词间无法启动");e.Handled=true;};
+                    app.DispatcherUnhandledException+=delegate(object s,DispatcherUnhandledExceptionEventArgs e){var active=app.MainWindow as MainWindow??window;if(active!=null)active.HandleError(e.Exception);else MessageBox.Show(e.Exception.Message,"world speace无法启动");e.Handled=true;};
                     bool started=false;splash.Loaded+=async delegate {
                         if(started)return;started=true;trace("splash loaded");
                         try{window=await StartupFlow.OpenAsync(app,data,splash);trace("ready: "+window.Title+" visible="+window.IsVisible);if(startupProbe){await System.Threading.Tasks.Task.Delay(400);window.RenderTo(Path.Combine(root,"startup-probe.png"));app.Shutdown();}}
                         catch(OperationCanceledException){app.Shutdown();}
-                        catch(Exception error){trace(error.ToString());if(!startupProbe)MessageBox.Show(error.Message,"词间无法启动",MessageBoxButton.OK,MessageBoxImage.Error);app.Shutdown(1);}
+                        catch(Exception error){trace(error.ToString());if(!startupProbe)MessageBox.Show(error.Message,"world speace无法启动",MessageBoxButton.OK,MessageBoxImage.Error);app.Shutdown(1);}
                     };
                     splash.Closed+=delegate{if(app.MainWindow==splash)app.Shutdown();};
                     int exit=app.Run(splash);mutex.ReleaseMutex();return exit;
                 }
-            }catch(Exception e){if(args.Contains("--self-test")||args.Contains("--render-tests")||args.Contains("--navigation-tests")||args.Contains("--exclusion-tests")||args.Contains("--motion-tests")||args.Contains("--startup-probe")||args.Contains("--appearance-tests")){File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"test-error.txt"),e.ToString());return 1;}MessageBox.Show(e.Message,"词间无法启动",MessageBoxButton.OK,MessageBoxImage.Error);return 1;}
+            }catch(Exception e){if(args.Contains("--self-test")||args.Contains("--render-tests")||args.Contains("--navigation-tests")||args.Contains("--exclusion-tests")||args.Contains("--motion-tests")||args.Contains("--startup-probe")||args.Contains("--appearance-tests")){File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"test-error.txt"),e.ToString());return 1;}MessageBox.Show(e.Message,"world speace无法启动",MessageBoxButton.OK,MessageBoxImage.Error);return 1;}
         }
         static string StableHash(string s){using(var sha=System.Security.Cryptography.SHA256.Create())return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(s.ToLowerInvariant()))).Replace("-","").Substring(0,24);}
     }

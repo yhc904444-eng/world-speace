@@ -25,7 +25,7 @@ CHINESE = re.compile(r"[\u3400-\u9fff]")
 
 
 def download(url: str, target: pathlib.Path) -> None:
-    request = urllib.request.Request(url, headers={"User-Agent": "LexisOfflineDictionaryBuilder/1.0"})
+    request = urllib.request.Request(url, headers={"User-Agent": "WorldSpeaceDictionaryBuilder/1.0"})
     with urllib.request.urlopen(request, timeout=120) as response, target.open("wb") as output:
         while chunk := response.read(1024 * 1024):
             output.write(chunk)
@@ -54,7 +54,7 @@ def main() -> None:
     DATA.mkdir(parents=True, exist_ok=True)
     CACHE.mkdir(parents=True, exist_ok=True)
     api = "https://api.github.com/repos/skywind3000/ECDICT/commits/master"
-    request = urllib.request.Request(api, headers={"User-Agent": "LexisOfflineDictionaryBuilder/1.0"})
+    request = urllib.request.Request(api, headers={"User-Agent": "WorldSpeaceDictionaryBuilder/1.0"})
     try:
         with urllib.request.urlopen(request, timeout=60) as response:
             commit = json.load(response)["sha"]
