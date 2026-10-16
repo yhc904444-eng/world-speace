@@ -26,6 +26,13 @@ namespace LexisDesk {
         [DataMember] public string Due;
         [DataMember] public int Reviews;
         [DataMember] public int Lapses;
+        [DataMember(EmitDefaultValue=false)] public int SchedulerVersion;
+        [DataMember(EmitDefaultValue=false)] public string Stage;
+        [DataMember(EmitDefaultValue=false)] public double Stability;
+        [DataMember(EmitDefaultValue=false)] public double Difficulty;
+        [DataMember(EmitDefaultValue=false)] public double IntervalDays;
+        [DataMember(EmitDefaultValue=false)] public string LastReview;
+        [DataMember(EmitDefaultValue=false)] public string ScheduleReason;
     }
     [DataContract] public class AnswerLog {
         [DataMember] public string Day;
@@ -33,6 +40,13 @@ namespace LexisDesk {
         [DataMember] public int Grade;
         [DataMember] public bool IsNew;
         [DataMember] public bool Spelling;
+        [DataMember(EmitDefaultValue=false)] public string At;
+        [DataMember(EmitDefaultValue=false)] public string StageBefore;
+        [DataMember(EmitDefaultValue=false)] public string StageAfter;
+        [DataMember(EmitDefaultValue=false)] public bool Reinforcement;
+        [DataMember(EmitDefaultValue=false)] public bool ScheduleUpdated;
+        [DataMember(EmitDefaultValue=false)] public string ScheduledDue;
+        [DataMember(EmitDefaultValue=false)] public double ElapsedDays;
     }
     [DataContract] public class Book {
         [DataMember] public string Id;
@@ -113,9 +127,10 @@ namespace LexisDesk {
             Appearance.Normalize(d);
             if(d.ExcludedWords.Any(string.IsNullOrWhiteSpace))throw new InvalidDataException("永不复习列表中存在无效词条。");
             if(d.DailyTarget<5 || d.DailyTarget>200) throw new InvalidDataException("每日目标应在 5 到 200 之间。");
-            if(d.Cards.Any(x=>x.Value==null || x.Value.Level<0 || x.Value.Level>6 || x.Value.Reviews<0 || x.Value.Lapses<0 || !ValidDate(x.Value.Due))) throw new InvalidDataException("学习卡片记录无效。");
+            if(d.Cards.Any(x=>x.Value==null || x.Value.Level<0 || x.Value.Level>6 || x.Value.Reviews<0 || x.Value.Lapses<0 || !ValidDate(x.Value.Due)||!ReviewScheduler.Valid(x.Value))) throw new InvalidDataException("学习卡片记录无效。");
             if(d.CustomWords.Any(w=>w==null || string.IsNullOrWhiteSpace(w.Id) || string.IsNullOrWhiteSpace(w.Text) || string.IsNullOrWhiteSpace(w.Translation))) throw new InvalidDataException("自定义词条无效。");
             if(d.CustomBooks.Any(b=>b==null || string.IsNullOrWhiteSpace(b.Id) || string.IsNullOrWhiteSpace(b.Name) || b.WordIds==null) || d.History.Any(h=>h==null || string.IsNullOrEmpty(h.Id) || !ValidDay(h.Day) || h.Grade<0 || h.Grade>2)) throw new InvalidDataException("词书或历史记录无效。");
+            if(d.History.Any(h=>(h.At!=null&&!ValidDate(h.At))||(h.ScheduledDue!=null&&!ValidDate(h.ScheduledDue))||double.IsNaN(h.ElapsedDays)||double.IsInfinity(h.ElapsedDays)||h.ElapsedDays<0))throw new InvalidDataException("作答时间记录无效。");
         }
         static bool ValidDate(string s) { DateTime t; return DateTime.TryParseExact(s,"o",CultureInfo.InvariantCulture,DateTimeStyles.RoundtripKind,out t); }
         static bool ValidDay(string s) { DateTime t; return DateTime.TryParseExact(s,"yyyy-MM-dd",CultureInfo.InvariantCulture,DateTimeStyles.None,out t); }
@@ -163,8 +178,10 @@ namespace LexisDesk {
         }
         public static string Day(DateTime now) { return now.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture); }
         public int NewToday(DateTime now) { return Data.History.Where(h=>h.Day==Day(now)&&h.IsNew&&!h.Spelling).Select(h=>h.Id).Distinct().Count(); }
-        public int ReviewedToday(DateTime now) { return Data.History.Where(h=>h.Day==Day(now)&&!h.IsNew&&!h.Spelling).Select(h=>h.Id).Distinct().Count(); }
-        public bool IsDue(string id,DateTime now) { CardState c; return !IsExcluded(id)&&Data.Cards.TryGetValue(id,out c) && DateTime.ParseExact(c.Due,"o",CultureInfo.InvariantCulture,DateTimeStyles.RoundtripKind)<=now; }
+        public int ReviewedToday(DateTime now) { return Data.History.Where(h=>h.Day==Day(now)&&!h.IsNew&&!h.Spelling&&!h.Reinforcement).Select(h=>h.Id).Distinct().Count(); }
+        public bool IsDue(string id,DateTime now) { CardState c; return !IsExcluded(id)&&Data.Cards.TryGetValue(id,out c) && ReviewScheduler.Parse(c.Due).ToUniversalTime()<=now.ToUniversalTime(); }
+        public int DueCount(DateTime now){return Data.Cards.Keys.Count(id=>Words.ContainsKey(id)&&IsDue(id,now));}
+        public DateTime? NextDue(){var dates=Data.Cards.Where(x=>Words.ContainsKey(x.Key)&&!IsExcluded(x.Key)).Select(x=>ReviewScheduler.Parse(x.Value.Due));return dates.Any()?(DateTime?)dates.Min():null;}
         public List<Word> Queue(bool review,bool spell,DateTime now) {
             var ids=Selected().WordIds.Where(id=>Words.ContainsKey(id)&&!IsExcluded(id));
             if(spell) {
@@ -173,22 +190,24 @@ namespace LexisDesk {
                 if(learned.Count==0) learned=ids.Take(10).ToList();
                 return learned.Select(id=>Words[id]).ToList();
             }
-            if(review) return ids.Where(id=>IsDue(id,now)).OrderBy(id=>Data.Cards[id].Due).Take(100).Select(id=>Words[id]).ToList();
+            if(review) return Data.Cards.Keys.Where(id=>Words.ContainsKey(id)&&IsDue(id,now)).OrderBy(id=>ReviewScheduler.Parse(Data.Cards[id].Due).ToUniversalTime()).ThenBy(id=>Words[id].Rank).ThenBy(id=>id).Take(100).Select(id=>Words[id]).ToList();
             return ids.Where(id=>!Data.Cards.ContainsKey(id)).Take(Math.Max(0,Data.DailyTarget-NewToday(now))).Select(id=>Words[id]).ToList();
         }
-        public void Grade(Word w,int grade,bool spelling,DateTime now) {
+        public AnswerLog Grade(Word w,int grade,bool spelling,DateTime now,bool reinforcement=false) {
             if(grade<0 || grade>2) throw new ArgumentOutOfRangeException("grade");
-            if(IsExcluded(w.Id))return;
+            if(IsExcluded(w.Id))return null;
             bool isNew=!Data.Cards.ContainsKey(w.Id);
+            CardState previous;Data.Cards.TryGetValue(w.Id,out previous);
+            bool practice=!spelling&&!isNew&&(reinforcement||ReviewScheduler.Parse(previous.Due).ToUniversalTime()>now.ToUniversalTime());
+            var log=new AnswerLog{Id=w.Id,Day=Day(now),At=now.ToString("o"),Grade=grade,IsNew=isNew&&!spelling,Spelling=spelling,Reinforcement=practice,StageBefore=previous==null?"new":previous.SchedulerVersion==0?"legacy":previous.Stage,ElapsedDays=previous==null||string.IsNullOrEmpty(previous.LastReview)?0:ReviewScheduler.Elapsed(ReviewScheduler.Parse(previous.LastReview),now)};
             if(!spelling) {
                 CardState c; if(!Data.Cards.TryGetValue(w.Id,out c)) { c=new CardState(); Data.Cards[w.Id]=c; }
                 c.Reviews++;
-                if(grade==0) { c.Level=0; c.Lapses++; c.Due=now.AddMinutes(10).ToString("o"); }
-                else if(grade==1) { c.Level=Math.Max(0,c.Level-1); c.Due=now.Date.AddDays(1).AddHours(4).ToString("o"); }
-                else { c.Level=Math.Min(6,c.Level+1); int[] days={1,1,3,7,14,30,60}; c.Due=now.Date.AddDays(days[c.Level]).AddHours(4).ToString("o"); }
+                if(!practice){ReviewScheduler.Schedule(c,grade,now,isNew);log.ScheduleUpdated=true;}
+                log.ScheduledDue=c.Due;log.StageAfter=c.SchedulerVersion==0?"legacy":c.Stage;
             }
             if(grade==0 && !Data.Favorites.Contains(w.Id)) Data.Favorites.Add(w.Id);
-            Data.History.Add(new AnswerLog{Id=w.Id,Day=Day(now),Grade=grade,IsNew=isNew&&!spelling,Spelling=spelling}); Save();
+            Data.History.Add(log);Save();return log;
         }
         public void ToggleFavorite(string id) { if(!Data.Favorites.Remove(id)) Data.Favorites.Add(id); Save(); }
         public List<Word> Search(string query,bool favorites,bool excludedOnly=false) {

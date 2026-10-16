@@ -2,11 +2,11 @@
 
 一个无需账号和安卓模拟器的 Windows 桌面背词程序。词库、学习记录、收藏和复习安排均保存在本机，日常学习无需联网。
 
-当前版本：**v1.3.1**。程序基于 C# / WPF / .NET Framework 4.8 独立实现，并非“不背单词”官方客户端，也不包含原应用的账号、付费词典或影视原声。
+当前版本：**v1.4.0**。程序基于 C# / WPF / .NET Framework 4.8 独立实现，并非“不背单词”官方客户端，也不包含原应用的账号、付费词典或影视原声。
 
 ## 下载与运行
 
-前往 [Releases 下载页面](https://github.com/yhc904444-eng/world-speace/releases/latest)，下载 `world-speace_Windows_v1.3.1.zip`，完整解压到有写入权限的文件夹，然后双击 `world speace.exe`。
+前往 [Releases 下载页面](https://github.com/yhc904444-eng/world-speace/releases/latest)，下载 `world-speace_Windows_v1.4.0.zip`，完整解压到有写入权限的文件夹，然后双击 `world speace.exe`。
 
 支持安装有 .NET Framework 4.8 的 Windows 10 / 11。运行发行包不需要安装 Python、Node.js、Java 或开发工具。
 
@@ -16,7 +16,7 @@
 
 - **18,147 个离线词条**：音标、英汉释义及可用词形变化。
 - **9 个分类词书**：中考、高考、四六级、考研、雅思、托福、GRE 和常用高频词。
-- **记忆卡片与到期复习**：根据“忘记 / 模糊 / 认识”安排后续复习。
+- **记忆卡片与到期复习**：初学与遗忘后的短时巩固，结合 FSRS-6 记忆模型安排长期复习；全部已学词书的到期词统一进入复习。
 - **拼写练习**：根据中文释义回想英文，单独记录拼写结果。
 - **永不复习**：看到已掌握的词可立即排除，退出后续新词、复习和拼写队列；支持在“不再复习”列表恢复。
 - **离线查词与收藏**：按英文或中文释义搜索，导出收藏 CSV。
@@ -50,6 +50,20 @@
 
 历史记录和收藏保留，词典中仍可查询。误点后可在“不再复习”页面点击“恢复复习”，沿用原来的学习进度和复习日期。不同词形分别处理，例如 `learn` 与 `learned`。
 
+## 复习如何安排
+
+新词首次作答后，先安排 **10 分钟后巩固**。忘记的词也会进入短时重学，并在本轮最多追加出现两次。本轮重现只作练习，即使再次答对也不会取消原定的到期复习；本轮持续超过 10 分钟时，同样需要下一轮完成到期作答。
+
+到期后顺利回忆，进入长期复习。后续间隔由 **FSRS-6** 根据每个词的难度、记忆稳定性、作答结果与实际经过时间计算，按作答时刻向后安排，最长 365 天。首页汇总全部已学词书的到期词，每轮最多 100 词；未完成的词继续保留在到期总数中。
+
+请先在心里回忆释义，再显示答案：**忘记**表示没能独立想起；**模糊**表示独立想起但吃力；**认识**表示顺利想起。需要答案提示才能回忆时应选“忘记”。成熟词的“模糊”对应成功但费力的回忆，采用模型计算间隔，不再强制安排明天，也不使用旧版固定等级跳回 60 天。
+
+卡片和词典详情显示下一次具体时间及原因。新记录保存完整作答时间、阶段、实际间隔与新到期时间，并区分本轮巩固和到期复习。拼写结果独立记录，不改变释义回忆排期。
+
+使用公开默认参数，模型目标保持率为 90%，**不是对实际正确率的保证，也尚未根据你的个人数据训练**。10 分钟步骤、1 天最小长期间隔、365 天上限是本应用的产品设置。旧版日期和历史记录原样保留，到期作答后根据原间隔近似初始化模型；不会伪造旧作答的精确时间。详细规则、来源与验证见 [复习计划说明](docs/review-scheduling.md)。
+
+![复习总览与下一次到期](docs/images/review-overview.png)
+
 ## 数据与隐私
 
 发行程序的学习数据位于程序同目录下的 `UserData` 文件夹。请不要直接在压缩包内运行，也不要把程序放入只读目录。
@@ -71,6 +85,8 @@
 ```powershell
 $app = Join-Path $PWD 'dist\world speace.exe'
 Start-Process -FilePath $app -ArgumentList '--self-test' -Wait
+Start-Process -FilePath $app -ArgumentList '--review-tests' -Wait
+Start-Process -FilePath $app -ArgumentList '--review-ui-tests' -Wait
 Start-Process -FilePath $app -ArgumentList '--exclusion-tests' -Wait
 Start-Process -FilePath $app -ArgumentList '--navigation-tests' -Wait
 Start-Process -FilePath $app -ArgumentList '--render-tests' -Wait
@@ -80,6 +96,8 @@ Start-Process -FilePath $app -ArgumentList '--appearance-tests' -Wait
 ```
 
 测试会在 `dist` 内生成独立的测试目录，不修改正常使用的 `UserData`。界面测试需要可运行 WPF 的 Windows 桌面环境。`package.ps1` 在验证输出存在后生成发行 ZIP，并使用明确的文件清单排除学习数据。
+
+复习模型测试包含与官方 `ts-fsrs 5.4.2` 独立生成的 13 组数值对照，以及短时巩固、逾期、跨词书、旧备份与真实界面操作的回归。构建和运行应用不需要 Node.js 或 FSRS 外部服务。
 
 如需重新筛选上游词库，使用 Python 3.11 或更新版本运行 `tools/prepare_dictionary.py`。该步骤需要联网并会更新词库和来源记录。重新生成图标可运行 `tools/make_icon.py`，需要 Pillow；这些工具不是应用运行依赖。
 

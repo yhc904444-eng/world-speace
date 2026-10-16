@@ -12,6 +12,8 @@
 **/exclusion-tests/
 **/motion-tests/
 **/appearance-tests/
+**/review-tests/
+**/review-ui-tests/
 **/errors.log
 **/test-error.txt
 **/startup-probe.txt

@@ -27,6 +27,8 @@ namespace LexisDesk {
         ListBox results;
         ContentControl detail;
         DispatcherTimer searchTimer;
+        DispatcherTimer reviewTimer;
+        int shownDueCount;
         SpeechSynthesizer speaker;
         bool speechReady;
         List<Word> session;
@@ -47,7 +49,9 @@ namespace LexisDesk {
             Appearance.Apply(Resources,Store.Data);Paint(this,BackgroundProperty,"PageFill");
             BuildShell();Navigate("today");
             PreviewKeyDown+=KeyHandler;
-            Closed+=delegate {ReleaseSpeech();};
+            reviewTimer=new DispatcherTimer{Interval=TimeSpan.FromSeconds(15)};
+            reviewTimer.Tick+=delegate{if(page=="today"&&Store.DueCount(DateTime.Now)!=shownDueCount)ShowToday();};reviewTimer.Start();
+            Closed+=delegate {ReleaseSpeech();reviewTimer.Stop();};
         }
         public static SolidColorBrush Brush(string hex) {return (SolidColorBrush)new BrushConverter().ConvertFromString(hex);}
         static void Paint(FrameworkElement element,DependencyProperty property,string color) {
@@ -99,7 +103,7 @@ namespace LexisDesk {
             var sidebarSurface=new Border{CornerRadius=new CornerRadius(0,22,22,0)};Paint(sidebarSurface,Border.BackgroundProperty,"SidebarFill");Paint(sidebarSurface,Border.BorderBrushProperty,"CardEdge");sidebarSurface.SetResourceReference(Border.BorderThicknessProperty,"CardStroke");Grid.SetRowSpan(sidebarSurface,3);sidebar.Children.Add(sidebarSurface);
             var brand=Stack(Text("world speace",22,"OnAccent",true),Text("OFFLINE VOCABULARY",10,"NavMuted"));brand.Margin=new Thickness(28,32,20,34);sidebar.Children.Add(brand);
             nav=new StackPanel{Margin=new Thickness(14,0,12,0)};Grid.SetRow(nav,1);sidebar.Children.Add(nav);
-            var foot=Stack(Text("每次记住一点点。",14,"NavMuted"),Text("独立单机版  v1.3.1\n学习记录只保存在本机",11,"NavMuted"));foot.Margin=new Thickness(26,24,16,28);Grid.SetRow(foot,2);sidebar.Children.Add(foot);
+            var foot=Stack(Text("每次记住一点点。",14,"NavMuted"),Text("独立单机版  v1.4.0\n学习记录只保存在本机",11,"NavMuted"));foot.Margin=new Thickness(26,24,16,28);Grid.SetRow(foot,2);sidebar.Children.Add(foot);
             shell.Children.Add(sidebar);
             var main=new Grid{Margin=new Thickness(36,27,32,15)};main.RowDefinitions.Add(new RowDefinition{Height=GridLength.Auto});main.RowDefinitions.Add(new RowDefinition());main.RowDefinitions.Add(new RowDefinition{Height=GridLength.Auto});
             var top=new DockPanel{Margin=Gap(0,24)};var date=Text(DateTime.Now.ToString("yyyy年M月d日  dddd",new CultureInfo("zh-CN")),12,"Muted");DockPanel.SetDock(date,Dock.Right);top.Children.Add(date);top.Children.Add(Text("给记忆留一点空间",12,"Muted"));main.Children.Add(top);
@@ -118,8 +122,8 @@ namespace LexisDesk {
         }
         void ShowToday() {
             var now=DateTime.Now;var book=Store.Selected();var p=Page("今天，也向前一点","先回顾，再认识新词。让每一次练习，都成为下一次想起的线索。");
-            var learn=Store.NewToday(now);var review=Store.ReviewedToday(now);var due=book.WordIds.Count(id=>Store.IsDue(id,now));
-            var metrics=new UniformGridCompat(3);metrics.Add(Metric("今日新学",learn.ToString("00"),"每日目标 "+Store.Data.DailyTarget+" 词"));metrics.Add(Metric("今日复习",review.ToString("00"),"已回顾的不同单词"));metrics.Add(Metric("到期复习",due.ToString("00"),"当前词书中待巩固的单词"));metrics.Margin=Gap(0,22);p.Children.Add(metrics);
+            var learn=Store.NewToday(now);var review=Store.ReviewedToday(now);var due=Store.DueCount(now);shownDueCount=due;
+            var metrics=new UniformGridCompat(3);metrics.Add(Metric("今日新学",learn.ToString("00"),"每日目标 "+Store.Data.DailyTarget+" 词"));metrics.Add(Metric("今日复习",review.ToString("00"),"到期作答的不同单词"));metrics.Add(Metric("到期复习",due.ToString("00"),"全部已学词书 · 每轮最多 100 词"));metrics.Margin=Gap(0,22);p.Children.Add(metrics);
             var hero=new Grid();hero.ColumnDefinitions.Add(new ColumnDefinition());hero.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(210)});
             var left=Stack(Text("TODAY'S FOCUS",11,"HeroMuted",true),Text(book.Name,28,"OnAccent",true),Text("把陌生，变成下一次的熟悉。",15,"HeroMuted"));((TextBlock)left.Children[1]).Margin=Gap(15,10);
             var actions=Row(Button(due>0?"开始复习  →":"暂无到期复习",()=>StartSession(true,false),true),Button("学习新词",()=>StartSession(false,false)));
@@ -128,7 +132,8 @@ namespace LexisDesk {
             int learned=book.WordIds.Count(id=>Store.Data.Cards.ContainsKey(id)&&!Store.IsExcluded(id));
             var right=Stack(Text("词书进度",12,"HeroMuted"),Text(learned.ToString("N0")+" / "+active.ToString("N0"),20,"OnAccent",true),Text("已学 / 参与学习的词\n永不复习 "+excluded+" 词",12,"HeroMuted"));right.Margin=new Thickness(20,25,0,0);((TextBlock)right.Children[1]).Margin=Gap(12,8);Grid.SetColumn(right,1);hero.Children.Add(right);
             p.Children.Add(Card(hero,"HeroFill",30));
-            var foot=GridPair(Card(Stack(Text("拼写，让记忆更扎实",18,null,true),WithMargin(Text("用中文释义回想英文，练习真正写出来。",13,"Muted"),10,20),Button("开始拼写测试",()=>StartSession(false,true)))),Card(Stack(Text("你的学习节奏",18,null,true),WithMargin(Text("认识：1 / 3 / 7 / 14 / 30 / 60 天后复习\n模糊：明天再见；忘记：10 分钟后再练",13,"Muted"),10,18),Button("调整每日目标",()=>Navigate("settings")))));foot.Margin=Gap(22,0);p.Children.Add(foot);
+            var next=Store.NextDue();string nextText=due>0?"全部词书有 "+due+" 个到期词，可开始复习。":next.HasValue?"下次到期："+next.Value.ToString("M月d日 HH:mm"):"先学习新词，10 分钟后回来巩固。";
+            var foot=GridPair(Card(Stack(Text("拼写，让记忆更扎实",18,null,true),WithMargin(Text("用中文释义回想英文，练习真正写出来。",13,"Muted"),10,20),Button("开始拼写测试",()=>StartSession(false,true)))),Card(Stack(Text("你的学习节奏",18,null,true),WithMargin(Text("初学与遗忘后先做 10 分钟巩固。\n之后根据每个词的回忆表现调整间隔。\n"+nextText,13,"Muted"),10,18),Button("查看复习说明",()=>Navigate("settings")))));foot.Margin=Gap(22,0);p.Children.Add(foot);
             body.Content=Scroll(p);
             if(!string.IsNullOrEmpty(Store.LoadNotice))status.Text=Store.LoadNotice;
         }
@@ -182,7 +187,7 @@ namespace LexisDesk {
             string forms=Store.ExchangeText(w.Exchange);if(forms.Length>0){p.Children.Add(WithMargin(Text("词形变化",12,"Muted",true),22,9));p.Children.Add(Text(forms,13,"Muted"));}
             if(!string.IsNullOrWhiteSpace(w.Example)){p.Children.Add(WithMargin(Text("语境例句 · 自制词书",12,"Muted",true),22,9));p.Children.Add(Text(w.Example,16));p.Children.Add(WithMargin(Text(w.ExampleTranslation,14,"Muted"),9,12));p.Children.Add(Button("▶  朗读例句",()=>Speak(w.Example)));}
             var state=Store.Data.Cards.ContainsKey(w.Id)?Store.Data.Cards[w.Id]:null;
-            p.Children.Add(WithMargin(Text(Store.IsExcluded(w.Id)?"已设为永不复习 · 不参加学习、到期复习和拼写":state==null?"尚未学习":("记忆等级 "+state.Level+" / 6  ·  下次复习 "+DateTime.Parse(state.Due,CultureInfo.InvariantCulture,DateTimeStyles.RoundtripKind).ToString("M月d日 HH:mm")),12,"Muted"),27,0));
+            p.Children.Add(WithMargin(Text(Store.IsExcluded(w.Id)?"已设为永不复习 · 不参加学习、到期复习和拼写":ReviewScheduler.Description(state),12,"Muted"),27,0));
             return Card(Scroll(p));
         }
         void ExportFavorites() {
@@ -191,8 +196,8 @@ namespace LexisDesk {
         }
         public void StartSession(bool review,bool spell) {
             session=Store.Queue(review,spell,DateTime.Now);cursor=0;correct=0;excludedInSession=0;sessionAnswers=0;sessionStartCount=session.Count;spelling=spell;attempts=new Dictionary<string,int>();
-            if(session.Count==0){MessageBox.Show(this,review?"当前词书没有到期复习。忘记的词会在 10 分钟后到期；永不复习的词不会出现在这里。":"今天的新词目标已完成，或当前词书已无可练习的词。可更换词书、调整目标，或在“不再复习”中恢复单词。","可以歇一会儿",MessageBoxButton.OK,MessageBoxImage.Information);return;}
-            page="study";revealed=false;spellingChecked=false;spellFeedback="";status.Text="当前词书："+Store.Selected().Name+"  ·  每次作答自动保存";ShowStudy();
+            if(session.Count==0){var next=Store.NextDue();MessageBox.Show(this,review?"全部已学词书目前没有到期复习。"+(next.HasValue?"下次到期："+next.Value.ToString("M月d日 HH:mm")+"。":"初学与遗忘后会安排 10 分钟巩固。")+"永不复习的词不会出现在这里。":"今天的新词目标已完成，或当前词书已无可练习的词。可更换词书、调整目标，或在“不再复习”中恢复单词。","可以歇一会儿",MessageBoxButton.OK,MessageBoxImage.Information);return;}
+            page="study";revealed=false;spellingChecked=false;spellFeedback="";status.Text=(review?"到期复习：全部已学词书":"当前词书："+Store.Selected().Name)+"  ·  每次作答自动保存";ShowStudy();
         }
         void ShowStudy() {
             cardSequence=0;
@@ -221,7 +226,9 @@ namespace LexisDesk {
             else {actions.Children.Add(Button("1  忘记",()=>Answer(0)));actions.Children.Add(Button("2  模糊",()=>Answer(1)));actions.Children.Add(Button("3  认识",()=>Answer(2),true));}
             if(!spelling)actions.Children.Add(Button(Store.Data.Favorites.Contains(w.Id)?"★  已收藏":"☆  收藏",()=>{Store.ToggleFavorite(w.Id);ShowStudy();}));
             actions.Children.Add(Button("永不复习",ExcludeCurrentWord));
-            bottom.Children.Add(actions);bottom.Children.Add(WithMargin(Centered(spelling?"拼写测试单独记录，不改变复习计划。答错的词自动收藏。":"诚实判断记忆程度。忘记的词会在本轮重现，并在 10 分钟后进入复习。",11,"Muted"),14,0));Grid.SetRow(bottom,2);root.Children.Add(bottom);body.Content=root;
+            bottom.Children.Add(actions);bottom.Children.Add(WithMargin(Centered(spelling?"拼写测试单独记录，不改变复习计划。答错的词自动收藏。":"没能独立想起选“忘记”；想起但吃力选“模糊”。本轮重现只作巩固，不替代到期复习。",11,"Muted"),14,0));
+            if(!spelling){CardState plan;Store.Data.Cards.TryGetValue(w.Id,out plan);bottom.Children.Add(WithMargin(Centered(ReviewScheduler.Description(plan),11,"Muted"),8,0));}
+            Grid.SetRow(bottom,2);root.Children.Add(bottom);body.Content=root;
             if(spelling&&!spellingChecked)Dispatcher.BeginInvoke(new Action(()=>spellBox.Focus()),DispatcherPriority.Input);
             if(Store.Data.AutoSpeak&&!spelling&&!revealed)Speak(w.Text);
         }
@@ -234,10 +241,10 @@ namespace LexisDesk {
             revealed=false;spellingChecked=false;spellFeedback="";ShowStudy();
             status.Text=word.Text+" 已设为永不复习，已移出本轮和后续练习。可在“不再复习”中恢复。";
         }
-        public void Answer(int grade){if(page!="study"||spelling||!revealed)return;var w=session[cursor];Store.Grade(w,grade,false,DateTime.Now);sessionAnswers++;if(grade==2)correct++;if(grade==0){int n;attempts.TryGetValue(w.Id,out n);attempts[w.Id]=n+1;if(n<2)session.Add(w);}NextCard();}
+        public void Answer(int grade){if(page!="study"||spelling||!revealed)return;var w=session[cursor];bool repeat=session.Take(cursor).Any(x=>x.Id==w.Id);Store.Grade(w,grade,false,DateTime.Now,repeat);sessionAnswers++;if(grade==2)correct++;if(grade==0){int n;attempts.TryGetValue(w.Id,out n);attempts[w.Id]=n+1;if(n<2)session.Add(w);}NextCard();}
         void CheckSpelling(){if(spellingChecked)return;bool ok=string.Equals(spellBox.Text.Trim(),session[cursor].Text,StringComparison.OrdinalIgnoreCase);Store.Grade(session[cursor],ok?2:0,true,DateTime.Now);sessionAnswers++;if(ok)correct++;spellFeedback=ok?"正确！记得很牢。":"还差一点，看看正确拼写。";spellingChecked=true;ShowStudy();}
         void NextCard(){cursor++;revealed=false;spellingChecked=false;spellFeedback="";ShowStudy();}
-        void ShowCompleted(){page="completed";var p=Page("这一轮，完成了。","记忆来自一次次相遇。做得很好，留一点时间给消化。");p.Children.Add(Card(Stack(Centered("✓",64,"Accent",true),WithMargin(Centered(sessionStartCount+" 个单词  ·  "+sessionAnswers+" 次练习",27,"Ink",true),20,10),Centered((spelling?"拼写正确":"判断为认识")+" "+correct+" 次"+(excludedInSession>0?"  ·  永不复习 "+excludedInSession+" 词":""),16,"Muted"),WithMargin(Row(Button("回到今日",()=>Navigate("today"),true),Button("查看学习记录",()=>Navigate("stats"))),30,10)),"SelectedFill",45));body.Content=Scroll(p);status.Text="本轮结果已保存在本机。";}
+        void ShowCompleted(){page="completed";var next=Store.NextDue();var p=Page("这一轮，完成了。",spelling?"拼写结果单独记录。":next.HasValue?(next.Value<=DateTime.Now?"还有到期单词，回到今日可继续复习。":"下次到期："+next.Value.ToString("M月d日 HH:mm")+"。本轮巩固不替代到期复习。 "):"记忆来自一次次相遇。");p.Children.Add(Card(Stack(Centered("✓",64,"Accent",true),WithMargin(Centered(sessionStartCount+" 个单词  ·  "+sessionAnswers+" 次练习",27,"Ink",true),20,10),Centered((spelling?"拼写正确":"判断为认识")+" "+correct+" 次"+(excludedInSession>0?"  ·  永不复习 "+excludedInSession+" 词":""),16,"Muted"),WithMargin(Row(Button("回到今日",()=>Navigate("today"),true),Button("查看学习记录",()=>Navigate("stats"))),30,10)),"SelectedFill",45));body.Content=Scroll(p);status.Text="本轮结果已保存在本机。";}
         void KeyHandler(object sender,KeyEventArgs e){if(page!="study")return;if(spelling)return;if(Keyboard.FocusedElement is TextBox)return;if(e.Key==Key.Space){Reveal();e.Handled=true;}else if(e.Key==Key.D1||e.Key==Key.NumPad1){Answer(0);e.Handled=true;}else if(e.Key==Key.D2||e.Key==Key.NumPad2){Answer(1);e.Handled=true;}else if(e.Key==Key.D3||e.Key==Key.NumPad3){Answer(2);e.Handled=true;}else if(e.Key==Key.P){Speak(session[cursor].Text);e.Handled=true;}else if(e.Key==Key.Escape){Navigate("today");e.Handled=true;}}
         void Speak(string text) {
             try {
@@ -250,23 +257,24 @@ namespace LexisDesk {
         }
         void ShowStats(){
             var now=DateTime.Now;var p=Page("每一次练习，都有迹可循","按本机日期记录新学、复习和拼写。重复作答保留为练习次数，不重复计入新学单词数。");
-            var metrics=new UniformGridCompat(3);metrics.Add(Metric("累计已学",Store.Data.Cards.Count.ToString("N0"),"不同单词"));metrics.Add(Metric("记忆稳定",Store.Data.Cards.Count(x=>x.Value.Level>=4).ToString("N0"),"达到 14 天及以上复习间隔"));metrics.Add(Metric("练习天数",Store.Data.History.Select(h=>h.Day).Distinct().Count().ToString("N0"),"有学习或拼写记录的日期"));p.Children.Add(metrics);
+            var metrics=new UniformGridCompat(3);metrics.Add(Metric("累计已学",Store.Data.Cards.Count.ToString("N0"),"不同单词"));metrics.Add(Metric("较长复习间隔",Store.Data.Cards.Count(x=>!Store.IsExcluded(x.Key)&&(x.Value.SchedulerVersion==0?x.Value.Level>=4:x.Value.Stage=="review"&&x.Value.IntervalDays>=14)).ToString("N0"),"间隔至少 14 天 · 不代表保持率"));metrics.Add(Metric("练习天数",Store.Data.History.Select(h=>h.Day).Distinct().Count().ToString("N0"),"有学习或拼写记录的日期"));p.Children.Add(metrics);
             var chart=new Grid{Height=190,Margin=Gap(22,10)};for(int i=0;i<14;i++)chart.ColumnDefinitions.Add(new ColumnDefinition());var counts=new List<int>();for(int i=13;i>=0;i--){var day=Store.Day(now.Date.AddDays(-i));counts.Add(Store.Data.History.Count(h=>h.Day==day));}int max=Math.Max(5,counts.Max());
             for(int i=0;i<14;i++){var col=new StackPanel{VerticalAlignment=VerticalAlignment.Bottom,HorizontalAlignment=HorizontalAlignment.Center};col.Children.Add(Text(counts[i].ToString(),11,"Muted"));var bar=new Border{Height=Math.Max(3,135.0*counts[i]/max),Width=27,CornerRadius=new CornerRadius(5,5,0,0),Margin=Gap(8,10)};Paint(bar,Border.BackgroundProperty,i==13?"Accent":"ChartPast");col.Children.Add(bar);col.Children.Add(Text(now.Date.AddDays(i-13).ToString("M/d"),10,"Muted"));Grid.SetColumn(col,i);chart.Children.Add(col);}
             var chartCard=Card(Stack(Text("最近 14 天 · 练习次数",17,null,true),chart));chartCard.Margin=Gap(22,22);p.Children.Add(chartCard);
             int spell=Store.Data.History.Count(h=>h.Spelling);int spellOk=Store.Data.History.Count(h=>h.Spelling&&h.Grade==2);p.Children.Add(Text("拼写累计 "+spell+" 次  ·  正确 "+spellOk+" 次"+(spell>0?"  ·  正确率 "+(100.0*spellOk/spell).ToString("0")+"%":""),15,null,true));
-            var days=Store.Data.History.Select(h=>h.Day).Distinct().OrderByDescending(d=>d).Take(30);foreach(var day in days){var hs=Store.Data.History.Where(h=>h.Day==day).ToList();var line=Row(Text(day,14),Text("     新学 "+hs.Where(h=>h.IsNew&&!h.Spelling).Select(h=>h.Id).Distinct().Count()+"  ·  复习 "+hs.Where(h=>!h.IsNew&&!h.Spelling).Select(h=>h.Id).Distinct().Count()+"  ·  拼写 "+hs.Count(h=>h.Spelling)+"  ·  作答 "+hs.Count,13,"Muted"));line.Margin=Gap(16,3);p.Children.Add(line);}body.Content=Scroll(p);
+            var days=Store.Data.History.Select(h=>h.Day).Distinct().OrderByDescending(d=>d).Take(30);foreach(var day in days){var hs=Store.Data.History.Where(h=>h.Day==day).ToList();var line=Row(Text(day,14),Text("     新学 "+hs.Where(h=>h.IsNew&&!h.Spelling).Select(h=>h.Id).Distinct().Count()+"  ·  复习 "+hs.Where(h=>!h.IsNew&&!h.Spelling&&!h.Reinforcement).Select(h=>h.Id).Distinct().Count()+"  ·  本轮巩固 "+hs.Count(h=>h.Reinforcement)+"  ·  拼写 "+hs.Count(h=>h.Spelling)+"  ·  作答 "+hs.Count,13,"Muted"));line.Margin=Gap(16,3);p.Children.Add(line);}body.Content=Scroll(p);
         }
         void ShowSettings(){
             var p=Page("让学习，合你的节奏","不用注册，不连接学习服务。词库、收藏、词书和复习计划全部保存在本地。");
             p.Children.Add(AppearanceOptions());
+            var reviewInfo=Card(Stack(Text("复习如何安排",18,null,true),WithMargin(Text("新词与忘记的词先安排 10 分钟巩固；本轮提前重现不会取消这次复习。\n到期作答后，根据每个词的回忆表现、难度与经过时间调整后续间隔，最长 365 天。\n没有独立想起选“忘记”；独立想起但吃力选“模糊”；顺利想起选“认识”。\n全部已学词书的到期词一起复习。拼写练习单独记录，不改变释义记忆排期。\n采用 FSRS-6 默认参数，模型目标保持率为 90%，尚未按你的个人数据训练，实际效果可能不同。\n旧版复习日期保持不变，到期作答后自动衔接新计划。",13,"Muted"),12,0)));reviewInfo.Margin=Gap(0,20);p.Children.Add(reviewInfo);
             var target=new ComboBox{Name="DailyTargetChoice",Width=180,HorizontalAlignment=HorizontalAlignment.Left};foreach(int n in new[]{5,10,15,20,30,40,50,80,100,150,200})target.Items.Add(n);if(!target.Items.Contains(Store.Data.DailyTarget))target.Items.Add(Store.Data.DailyTarget);target.SelectedItem=Store.Data.DailyTarget;
             var auto=new CheckBox{Content="打开学习卡片时自动朗读英文",IsChecked=Store.Data.AutoSpeak,Margin=Gap(20,18)};
             var voice=new ComboBox{Width=340,HorizontalAlignment=HorizontalAlignment.Left};voice.Items.Add("自动选择英语语音");try{using(var ss=new SpeechSynthesizer()){foreach(var v in ss.GetInstalledVoices().Where(v=>v.Enabled&&v.VoiceInfo.Culture.TwoLetterISOLanguageName=="en"))voice.Items.Add(v.VoiceInfo.Name);}}catch{}voice.SelectedIndex=0;if(!string.IsNullOrEmpty(Store.Data.Voice)&&voice.Items.Contains(Store.Data.Voice))voice.SelectedItem=Store.Data.Voice;
             var prefs=Stack(Text("每日新词目标",16,null,true),WithMargin(target,14,0),auto,Text("离线英语语音",13,"Muted"),WithMargin(voice,10,20));prefs.Children.Add(Row(Button("保存设置",()=>{Store.Data.DailyTarget=(int)target.SelectedItem;Store.Data.AutoSpeak=auto.IsChecked==true;Store.Data.Voice=voice.SelectedIndex>0?(string)voice.SelectedItem:null;Store.Save();status.Text="设置已保存。";},true),Button("试听",()=>{Store.Data.Voice=voice.SelectedIndex>0?(string)voice.SelectedItem:null;Speak("A little progress every day.");})));p.Children.Add(Card(prefs));
             var backup=Stack(Text("给进度留一份备份",18,null,true),WithMargin(Text("导出的 JSON 包含学习记录、收藏、设置和自制词书。恢复会替换当前数据，软件会先保留恢复前的副本。",13,"Muted"),10,20),Row(Button("导出完整备份",Backup,true),Button("恢复备份",Restore)));var backupCard=Card(backup);backupCard.Margin=Gap(20,20);p.Children.Add(backupCard);
             p.Children.Add(Text("数据文件夹",12,"Muted"));p.Children.Add(WithMargin(new TextBox{Text=Store.DirectoryPath,IsReadOnly=true,FontSize=12},8,18));
-            p.Children.Add(Text("关于这个版本",16,null,true));p.Children.Add(WithMargin(Text("world speace 1.3.1 · 根据单机学习需求独立制作，并非不背单词官方客户端。\n内置词库：ECDICT（MIT 许可）。不包含原应用账号、云端学习记录、影视原声和付费词典。\n内置词条提供释义与词形；双语例句可随自制词书导入。发音使用 Windows 本地英语语音。\n词表来源、筛选规则和许可证随发行包提供。",12,"Muted"),10,18));body.Content=Scroll(p);
+            p.Children.Add(Text("关于这个版本",16,null,true));p.Children.Add(WithMargin(Text("world speace 1.4.0 · 根据单机学习需求独立制作，并非不背单词官方客户端。\n内置词库：ECDICT（MIT 许可）。不包含原应用账号、云端学习记录、影视原声和付费词典。\n内置词条提供释义与词形；双语例句可随自制词书导入。发音使用 Windows 本地英语语音。\n词表来源、筛选规则和许可证随发行包提供。",12,"Muted"),10,18));body.Content=Scroll(p);
         }
         public void RefreshAppearance(){Appearance.Apply(Resources,Store.Data);}
         UIElement AppearanceOptions() {
@@ -300,12 +308,14 @@ namespace LexisDesk {
                 Action<string> trace=message=>{if(startupProbe)File.AppendAllText(Path.Combine(root,"startup-probe.txt"),DateTime.Now.ToString("o")+" "+message+"\n",new UTF8Encoding(false));};
                 if(startupProbe){File.WriteAllText(Path.Combine(root,"startup-probe.txt"),"");trace("entry");}
                 if(args.Contains("--self-test"))return Tests.Run(root);
+                if(args.Contains("--review-tests"))return ReviewTests.Run(root);
                 var app=new Application();
                 if(args.Contains("--render-tests")){Tests.Render(root,app);return 0;}
                 if(args.Contains("--navigation-tests")){Tests.Navigation(root,app);return 0;}
                 if(args.Contains("--exclusion-tests")){Tests.Exclusions(root,app);return 0;}
                 if(args.Contains("--motion-tests")){MotionTests.Run(root,app);return 0;}
                 if(args.Contains("--appearance-tests")){AppearanceTests.Run(root,app);return 0;}
+                if(args.Contains("--review-ui-tests")){ReviewTests.UI(root,app);return 0;}
                 bool created;using(var mutex=new System.Threading.Mutex(true,"Local\\LexisDesk_"+StableHash(data),out created)){
                     if(!created){trace("same data directory is already open");if(startupProbe)return 2;MessageBox.Show("这个数据文件夹已有 world speace 正在运行，请使用已打开的窗口。","world speace");return 0;}
                     MainWindow window=null;var splash=new SplashWindow();app.ShutdownMode=ShutdownMode.OnExplicitShutdown;
@@ -320,7 +330,7 @@ namespace LexisDesk {
                     splash.Closed+=delegate{if(app.MainWindow==splash)app.Shutdown();};
                     int exit=app.Run(splash);mutex.ReleaseMutex();return exit;
                 }
-            }catch(Exception e){if(args.Contains("--self-test")||args.Contains("--render-tests")||args.Contains("--navigation-tests")||args.Contains("--exclusion-tests")||args.Contains("--motion-tests")||args.Contains("--startup-probe")||args.Contains("--appearance-tests")){File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"test-error.txt"),e.ToString());return 1;}MessageBox.Show(e.Message,"world speace无法启动",MessageBoxButton.OK,MessageBoxImage.Error);return 1;}
+            }catch(Exception e){if(args.Contains("--self-test")||args.Contains("--render-tests")||args.Contains("--navigation-tests")||args.Contains("--exclusion-tests")||args.Contains("--motion-tests")||args.Contains("--startup-probe")||args.Contains("--appearance-tests")||args.Contains("--review-tests")||args.Contains("--review-ui-tests")){File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"test-error.txt"),e.ToString());return 1;}MessageBox.Show(e.Message,"world speace无法启动",MessageBoxButton.OK,MessageBoxImage.Error);return 1;}
         }
         static string StableHash(string s){using(var sha=System.Security.Cryptography.SHA256.Create())return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(s.ToLowerInvariant()))).Replace("-","").Substring(0,24);}
     }

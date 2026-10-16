@@ -26,11 +26,11 @@ namespace LexisDesk {
             Check(s.Search("计算机",false).Count>0,"Chinese definition search");
             var q=s.Queue(false,false,now);Check(q.Count==20&&q.Select(item=>item.Id).Distinct().Count()==20,"daily unseen word queue");
             var w=q[0];s.Grade(w,2,false,now);
-            Check(s.NewToday(now)==1&&s.Data.Cards[w.Id].Level==1&&!s.IsDue(w.Id,now.AddHours(1)),"new word counted once and due tomorrow");
-            Check(s.IsDue(w.Id,now.Date.AddDays(1).AddHours(5)),"scheduled word becomes due next day");
-            var state=s.Data.Cards[w.Id];Check(DateTime.Parse(state.Due).Date==now.Date.AddDays(1),"first remembered interval one day");
-            s.Grade(w,2,false,now.AddDays(1));Check(state.Level==2&&DateTime.Parse(state.Due).Date==now.Date.AddDays(4),"second remembered interval three days");
-            s.Grade(w,1,false,now.AddDays(4));Check(state.Level==1&&DateTime.Parse(state.Due).Date==now.Date.AddDays(5),"hesitation reduces level and schedules tomorrow");
+            Check(s.NewToday(now)==1&&s.Data.Cards[w.Id].Stage=="learning"&&!s.IsDue(w.Id,now.AddMinutes(9)),"new word counted once and enters short-term learning");
+            Check(s.IsDue(w.Id,now.AddMinutes(10)),"new learning becomes due after ten elapsed minutes");
+            var state=s.Data.Cards[w.Id];Check(DateTime.Parse(state.Due)==now.AddMinutes(10),"first remembered answer preserves a real short learning step");
+            s.Grade(w,2,false,now.AddMinutes(10));Check(state.Stage=="review"&&DateTime.Parse(state.Due)>now.AddDays(1),"successful delayed learning graduates to model-based review");
+            var due=ReviewScheduler.Parse(state.Due);double difficulty=state.Difficulty;s.Grade(w,1,false,due);Check(state.Stage=="review"&&state.Difficulty>difficulty&&DateTime.Parse(state.Due)>due,"effortful recall updates difficulty and schedules a model-based interval");
             s.Grade(q[1],0,false,now);Check(s.Data.Favorites.Contains(q[1].Id)&&!s.IsDue(q[1].Id,now.AddMinutes(9))&&s.IsDue(q[1].Id,now.AddMinutes(10)),"forgotten word favorited and due in ten minutes");
             Check(s.Queue(true,false,now.AddMinutes(11)).Any(x=>x.Id==q[1].Id),"review queue contains due card");
             s.Grade(q[2],0,true,now);Check(!s.Data.Cards.ContainsKey(q[2].Id)&&s.Data.Favorites.Contains(q[2].Id)&&s.NewToday(now)==2,"spelling logged without changing SRS or new-word count");
