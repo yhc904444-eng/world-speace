@@ -6,7 +6,7 @@
 
 ## 下载与运行
 
-前往 [Releases 下载页面](https://github.com/yhc904444-eng/cijian-windows/releases/latest)，下载 `词间_Windows单机版_v1.3.0.zip`，完整解压到有写入权限的文件夹，然后双击 `词间.exe`。
+前往 [Releases 下载页面](https://github.com/yhc904444-eng/cijian-windows/releases/latest)，下载 `Cijian_Windows_v1.3.0.zip`，完整解压到有写入权限的文件夹，然后双击 `词间.exe`。
 
 支持安装有 .NET Framework 4.8 的 Windows 10 / 11。运行发行包不需要安装 Python、Node.js、Java 或开发工具。
 
