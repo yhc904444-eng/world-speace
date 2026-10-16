@@ -1,0 +1,30 @@
+# Generated programs and release archives are distributed through GitHub Releases.
+/dist/
+/release/
+/verification/
+/tools/dictionary-source/
+
+# Portable application data and development test output must stay local.
+**/UserData/
+**/test-runs/
+**/render-tests/
+**/navigation-tests/
+**/exclusion-tests/
+**/motion-tests/
+**/appearance-tests/
+**/errors.log
+**/test-error.txt
+**/startup-probe.txt
+**/startup-probe.png
+*.bak
+*.tmp
+
+# Editor files, Python caches and local credentials.
+.vs/
+.vscode/
+__pycache__/
+*.pyc
+*.user
+.env
+.env.*
+!.env.example
