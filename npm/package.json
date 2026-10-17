@@ -1,0 +1,20 @@
+{
+  "name": "world-speace",
+  "version": "1.4.0",
+  "description": "Windows offline vocabulary study app with FSRS-6 spaced review",
+  "license": "UNLICENSED",
+  "bin": { "world-speace": "bin/world-speace.cjs" },
+  "files": ["bin/", "app/", "README.md"],
+  "os": ["win32"],
+  "engines": { "node": ">=20" },
+  "repository": { "type": "git", "url": "git+https://github.com/yhc904444-eng/world-speace.git", "directory": "npm" },
+  "homepage": "https://github.com/yhc904444-eng/world-speace",
+  "bugs": { "url": "https://github.com/yhc904444-eng/world-speace/issues" },
+  "keywords": ["windows", "vocabulary", "offline", "spaced-repetition", "fsrs"],
+  "publishConfig": { "access": "public", "registry": "https://registry.npmjs.org/" },
+  "scripts": { "prepack": "node scripts/prepare.cjs", "test": "node --test test/*.test.cjs" },
+  "worldSpeace": {
+    "appVersion": "1.4.0",
+    "exeSha256": "4bb70eb5b1aa9fd7176d59ccd124d981e90bdb5f50205bdfbaaf33a69bc98caa"
+  }
+}

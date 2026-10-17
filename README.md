@@ -12,6 +12,19 @@
 
 升级时先关闭旧程序，用新版程序文件覆盖原目录，**保留 `UserData` 文件夹**即可继续使用已有进度。
 
+## 使用 npm 安装
+
+Windows 上安装 Node.js 20 或更新版本后，也可通过 npm 下载完整应用，无需 npm 账号：
+
+```powershell
+npm install -g https://github.com/yhc904444-eng/world-speace/releases/download/v1.4.0/world-speace-1.4.0.tgz
+world-speace
+```
+
+包直接包含 v1.4.0 的 Windows 程序，没有安装后下载脚本或第三方 Node.js 依赖，安装后可离线学习。仍需 .NET Framework 4.8。这个地址是 GitHub 托管的 npm 包，尚不表示已上架 npm 注册表；不能直接省略为 `npm install -g world-speace`。
+
+默认学习记录保存到 `%LOCALAPPDATA%\world-speace\UserData`，更新/卸载 npm 包会保留这份独立数据。继续使用便携版原进度时，执行 `world-speace --data-dir "原来的 UserData 文件夹路径"`。运行 `world-speace --check` 可检查程序和数据路径。更多说明见 [npm 安装说明](npm/README.md)。
+
 ## 功能
 
 - **18,147 个离线词条**：音标、英汉释义及可用词形变化。
@@ -96,6 +109,16 @@ Start-Process -FilePath $app -ArgumentList '--appearance-tests' -Wait
 ```
 
 测试会在 `dist` 内生成独立的测试目录，不修改正常使用的 `UserData`。界面测试需要可运行 WPF 的 Windows 桌面环境。`package.ps1` 在验证输出存在后生成发行 ZIP，并使用明确的文件清单排除学习数据。
+
+准备好已验证的 Windows 发行目录后，可制作 npm 包：
+
+```powershell
+node npm/scripts/prepare.cjs
+npm test --prefix npm
+npm pack ./npm --pack-destination release
+```
+
+打包前核对 `npm/package.json` 中的版本和 Windows 程序 SHA256。`npm/app` 是生成目录，不提交 Git；程序以发布附件提供。npm 包仅包含启动器、公开程序与说明/许可，不包含测试、凭据或个人记录。
 
 复习模型测试包含与官方 `ts-fsrs 5.4.2` 独立生成的 13 组数值对照，以及短时巩固、逾期、跨词书、旧备份与真实界面操作的回归。构建和运行应用不需要 Node.js 或 FSRS 外部服务。
 
