@@ -5,7 +5,7 @@
 - 新增携带 Windows v1.4.0 程序的 npm 包，可使用 GitHub 附件地址安装并通过 `world-speace` 启动。
 - 不使用安装后下载脚本、不增加第三方 Node.js 依赖；启动前核对程序 SHA256。
 - 学习数据与 npm/npx 包目录分离，支持指定原便携版数据目录。
-- 提供 `--check`、`--version`、`--help`；npm 注册表发布仍需独立账号授权。
+- 提供 `--check`、`--version`、`--help`；v1.4.0 已发布到 npm 官方注册表，支持按包名安装。
 
 ## v1.4.0
 

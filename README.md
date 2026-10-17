@@ -17,11 +17,18 @@
 Windows 上安装 Node.js 20 或更新版本后，也可通过 npm 下载完整应用，无需 npm 账号：
 
 ```powershell
+npm install -g world-speace --registry=https://registry.npmjs.org
+world-speace
+```
+
+已发布到 [npm 官方注册表](https://www.npmjs.com/package/world-speace)。命令显式使用官方源，避免新包尚未同步到其他镜像。也可从 GitHub 附件安装同一份包：
+
+```powershell
 npm install -g https://github.com/yhc904444-eng/world-speace/releases/download/v1.4.0/world-speace-1.4.0.tgz
 world-speace
 ```
 
-包直接包含 v1.4.0 的 Windows 程序，没有安装后下载脚本或第三方 Node.js 依赖，安装后可离线学习。仍需 .NET Framework 4.8。这个地址是 GitHub 托管的 npm 包，尚不表示已上架 npm 注册表；不能直接省略为 `npm install -g world-speace`。
+包直接包含 v1.4.0 的 Windows 程序，没有安装后下载脚本或第三方 Node.js 依赖，安装后可离线学习。仍需 .NET Framework 4.8。PowerShell 若阻止执行 `.ps1`，可使用 `npm.cmd` 和 `world-speace.cmd`。
 
 默认学习记录保存到 `%LOCALAPPDATA%\world-speace\UserData`，更新/卸载 npm 包会保留这份独立数据。继续使用便携版原进度时，执行 `world-speace --data-dir "原来的 UserData 文件夹路径"`。运行 `world-speace --check` 可检查程序和数据路径。更多说明见 [npm 安装说明](npm/README.md)。
 
