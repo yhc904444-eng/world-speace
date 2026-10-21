@@ -48,6 +48,7 @@ async function runSmoke(){
   check(await win.webContents.executeJavaScript('typeof require==="undefined" && typeof process==="undefined"'),'renderer has no Node access');
   check(win.webContents.getLastWebPreferences().sandbox===true,'renderer sandbox enabled');
   check(await win.webContents.executeJavaScript(`fetch('data/words.tsv').then(r=>r.text()).then(t=>t.trimEnd().split('\\n').length===18147)`),'packaged offline dictionary loads');
+  check(await win.webContents.executeJavaScript(`document.fonts.load('400 16px "World Speace CJK"','今天中文词库').then(()=>document.fonts.check('400 16px "World Speace CJK"','今天中文词库'))`),'bundled Chinese font loads without system CJK fonts');
   await win.webContents.executeJavaScript(`(()=>{const click=s=>document.querySelector(s).click();click('[data-action="start-new"]');click('[data-action="reveal"]');click('[data-grade="2"]');click('[data-action="today"]');click('[data-action="settings"]');const target=document.getElementById('DailyTarget');target.value='30';target.dispatchEvent(new Event('change',{bubbles:true}));click('[data-action="export-backup"]');})()`);
   await new Promise(resolve=>setTimeout(resolve,100));
   const saved=store.read(),data=JSON.parse(saved);
@@ -70,7 +71,7 @@ app.whenReady().then(async()=>{
     if(!url.pathname.startsWith('/assets/')||relative.includes('\\')||relative.split('/').includes('..'))return new Response('',{status:403});
     const file=path.resolve(assets,relative);
     if(!file.startsWith(assets+path.sep))return new Response('',{status:403});
-    try{const mime={'.html':'text/html','.mjs':'text/javascript','.css':'text/css','.png':'image/png','.json':'application/json','.tsv':'text/plain','.txt':'text/plain'}[path.extname(file)]||'application/octet-stream';return new Response(fs.readFileSync(file),{headers:{'Content-Type':mime+(mime==='image/png'?'':'; charset=utf-8'),'Cache-Control':'no-store'}});}catch{return new Response('',{status:404});}
+    try{const mime={'.html':'text/html','.mjs':'text/javascript','.css':'text/css','.png':'image/png','.ttf':'font/ttf','.json':'application/json','.tsv':'text/plain','.txt':'text/plain'}[path.extname(file)]||'application/octet-stream';return new Response(fs.readFileSync(file),{headers:{'Content-Type':mime+(['image/png','font/ttf'].includes(mime)?'':'; charset=utf-8'),'Cache-Control':'no-store'}});}catch{return new Response('',{status:404});}
   });
   session.defaultSession.setPermissionRequestHandler((_contents,_permission,callback)=>callback(false));
   session.defaultSession.setPermissionCheckHandler(()=>false);

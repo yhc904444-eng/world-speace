@@ -44,6 +44,7 @@ def desktop_assets(archive):
     assert asar_entry(archive, "www/data/words.tsv") == dictionary
     assert asar_entry(archive, "www/domain.mjs") == (ROOT / "android/app/src/main/assets/domain.mjs").read_bytes()
     assert asar_entry(archive, "main.cjs") == (ROOT / "cross-platform/desktop/app/main.cjs").read_bytes()
+    assert asar_entry(archive, "www/fonts/NotoSansSC.ttf") == (ROOT / "cross-platform/desktop/fonts/NotoSansSC.ttf").read_bytes()
 
 
 records = []
@@ -96,7 +97,7 @@ for name in ("darwin", "linux", "ios"):
     folder = ROOT / "verification" / ("verification-" + name)
     report = next(folder.glob("*.json"))
     data = json.loads(report.read_text())
-    assert data.get("passed") is True if name == "ios" else data.get("count") == 7, data
+    assert data.get("passed") is True if name == "ios" else data.get("count") == 8, data
     verification[name] = data
 
 manifest = {

@@ -8,6 +8,8 @@ android/app/src/main/assets/data/words.tsv -text whitespace=-blank-at-eol
 *.py text eol=lf
 *.ico binary
 *.png binary
+*.ttf binary
+cross-platform/desktop/fonts/OFL.txt -text -whitespace
 # Preserve the exact bytes whose hashes are recorded in source.json.
 data/words.tsv -text
 data/ECDICT-LICENSE.txt -text

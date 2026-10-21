@@ -13,16 +13,24 @@ export function prepare(target,label){
   let code=fs.readFileSync(appPath,'utf8');
   code=code.replaceAll('Android ${VERSION}',label+' ${VERSION}');
   fs.writeFileSync(appPath,code);
+  const prepared=[...names];
+  if(label!=='iOS'){
+    fs.mkdirSync(path.join(target,'fonts'),{recursive:true});
+    for(const name of ['NotoSansSC.ttf','OFL.txt','source.json']){const relative='fonts/'+name;fs.copyFileSync(path.join(root,'desktop/fonts',name),path.join(target,relative));prepared.push(relative);}
+    const css=path.join(target,'app.css');
+    const fontFace='@font-face{font-family:"World Speace CJK";src:url("fonts/NotoSansSC.ttf") format("truetype");font-style:normal;font-weight:100 900;font-display:block;}\n';
+    fs.writeFileSync(css,fs.readFileSync(css,'utf8').replace('@charset "UTF-8";','@charset "UTF-8";\n'+fontFace).replace('system-ui,-apple-system,"Noto Sans SC"','system-ui,-apple-system,"World Speace CJK","Noto Sans SC"'));
+  }
   if(fs.readFileSync(path.join(target,'domain.mjs'),'utf8').includes(`VERSION = '${version}'`)===false)throw new Error('Shared application version differs from cross-platform version');
   console.log('Prepared '+label+': '+target);
-  return names;
+  return prepared;
 }
 export function prepareWeb(){
-  const target=path.join(root,'build/web');prepare(target,'网页');
+  const target=path.join(root,'build/web'),prepared=prepare(target,'网页');
   for(const name of ['pwa.mjs','manifest.webmanifest','icon.svg','icon-192.png','icon-512.png','serve.mjs'])fs.copyFileSync(path.join(root,'web',name),path.join(target,name));
   const index=path.join(target,'index.html');
   fs.writeFileSync(index,fs.readFileSync(index,'utf8').replace('</head>','<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon.png"></head>').replace('</body>','<script type="module" src="pwa.mjs"></script></body>'));
-  const cached=[...names,'./','pwa.mjs','manifest.webmanifest','icon.svg','icon-192.png','icon-512.png'];
+  const cached=[...prepared,'./','pwa.mjs','manifest.webmanifest','icon.svg','icon-192.png','icon-512.png'];
   const digest=createHash('sha256');for(const name of cached.filter(n=>n!=='./'))digest.update(fs.readFileSync(path.join(target,name)));
   const template=fs.readFileSync(path.join(root,'web/service-worker.js'),'utf8');
   fs.writeFileSync(path.join(target,'service-worker.js'),template.replace('__VERSION__',version+'-'+digest.digest('hex').slice(0,12)).replace('__FILES__',JSON.stringify(cached)));

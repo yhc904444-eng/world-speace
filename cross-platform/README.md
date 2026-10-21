@@ -33,4 +33,4 @@ GitHub Actions 的 Cross-platform packages 工作流完成原生构建和验证�
 
 这次覆盖常用的 Windows、Android、macOS、Linux、iOS/iPadOS 和支持 PWA 的浏览器。HarmonyOS NEXT、电视系统、手表和商店专用渠道没有独立原生工程。支持 Android APK 的鸿蒙设备可尝试 Android 包，完全不支持 APK 的设备可使用支持的浏览器网页版；不把这些兼容方式称为原生鸿蒙版。
 
-ECDICT 和 FSRS 的 MIT 许可随每个资源包保留。Electron 的许可证与 Chromium 第三方许可随桌面运行时分发。
+ECDICT 和 FSRS 的 MIT 许可随每个资源包保留。桌面和网页版内置 Noto Sans SC 可变字体及 SIL OFL 1.1 许可，英文系统也可离线显示中文；字体来源固定提交和 SHA256 见 desktop/fonts/source.json。Electron 的许可证与 Chromium 第三方许可随桌面运行时分发。
