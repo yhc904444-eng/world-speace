@@ -1,4 +1,4 @@
-import packager from '@electron/packager';
+import {packager} from '@electron/packager';
 import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
