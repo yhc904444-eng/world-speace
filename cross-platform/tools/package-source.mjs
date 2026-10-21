@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {root,version,prepare} from './prepare.mjs';
+import {zipFolder} from './archive.mjs';
 const repository=path.dirname(root),release=path.join(root,'release');
 fs.mkdirSync(path.join(root,'build'),{recursive:true});fs.mkdirSync(release,{recursive:true});
 const packageRoot=fs.mkdtempSync(path.join(root,'build/source-'));
@@ -18,9 +19,6 @@ const commit=execFileSync('git',['rev-parse','HEAD'],{cwd:repository}).toString(
 fs.writeFileSync(path.join(allSource,'RELEASE.json'),JSON.stringify({version,commit,windows:'1.5.0',android:version,otherPlatforms:version,privateDataIncluded:false},null,2));
 for(const [folder,filename] of [[allSource,`world-speace_All-Source_v${version}.zip`],[iosSource,`world-speace_iOS_v${version}-Source.zip`]]){
   const output=path.join(release,filename);
-  if(process.platform==='win32'){
-    execFileSync('powershell.exe',['-NoProfile','-Command',`Compress-Archive -LiteralPath '${folder.replaceAll("'","''")}' -DestinationPath '${output.replaceAll("'","''")}' -Force`]);
-    execFileSync('powershell.exe',['-NoProfile','-File',path.join(repository,'android/tools/normalize-zip-paths.ps1'),'-Path',output],{stdio:'inherit'});
-  }else execFileSync('zip',['-q','-r',output,path.basename(folder)],{cwd:packageRoot});
+  zipFolder(folder,output);
   console.log(output);
 }
