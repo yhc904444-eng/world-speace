@@ -39,6 +39,9 @@ jobs:
           build_sha=$(python3 -c 'import json; print(json.load(open("build-run.json"))["head_sha"])')
           git diff --exit-code "$build_sha" "$RELEASE_TAG" -- android/app cross-platform/desktop cross-platform/ios cross-platform/tools cross-platform/web cross-platform/tests cross-platform/package.json cross-platform/package-lock.json
           test "$(gh release view "$RELEASE_TAG" --repo "$REPOSITORY" --json isDraft --jq .isDraft)" = true
+          release_id=$(gh api "repos/$REPOSITORY/releases?per_page=100" --jq '.[] | select(.tag_name=="v1.5.1" and .draft) | .id')
+          [[ "$release_id" =~ ^[0-9]+$ ]]
+          echo "RELEASE_ID=$release_id" >> "$GITHUB_ENV"
       - name: Download verified native packages inside GitHub
         run: |
           gh run download "$BUILD_RUN" --repo "$REPOSITORY" --name desktop-darwin --name desktop-linux --name ios-unsigned --name web-package --dir downloaded
@@ -52,7 +55,7 @@ jobs:
           gh release upload "$RELEASE_TAG" SHA256SUMS.txt --repo "$REPOSITORY"
       - name: Verify server digests and publish together
         run: |
-          gh api "repos/$REPOSITORY/releases/tags/$RELEASE_TAG" > remote-release.json
+          gh api "repos/$REPOSITORY/releases/$RELEASE_ID" > remote-release.json
           python3 - <<'PY'
           import hashlib,json,pathlib
           remote=json.load(open('remote-release.json'))
