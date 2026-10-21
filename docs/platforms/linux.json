@@ -1,0 +1,17 @@
+{
+  "passed": [
+    "renderer has no Node access",
+    "renderer sandbox enabled",
+    "packaged offline dictionary loads",
+    "bundled Chinese font loads without system CJK fonts",
+    "learning and preferences reach atomic native storage",
+    "native JSON backup equals persisted progress",
+    "external network blocked",
+    "reopening preserves exact saved progress"
+  ],
+  "count": 8,
+  "platform": "linux",
+  "arch": "x64",
+  "electron": "45.0.0",
+  "userDataIsolated": true
+}

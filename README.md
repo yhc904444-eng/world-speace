@@ -1,20 +1,38 @@
-# world speace · Windows 单机词汇学习
+# world speace · 多平台离线词汇学习
 
-一个无需账号和安卓模拟器的 Windows 桌面背词程序。词库、学习记录、收藏和复习安排均保存在本机，日常学习无需联网。
+一个无需账号的离线背词程序，提供 Windows、Android、macOS、Linux、iOS/iPadOS 工程与网页版本。词库、学习记录、收藏和复习安排均保存在本机，日常学习无需联网。
 
-当前源码及本地构建：**v1.5.0**（尚未发布到 GitHub/npm）。程序基于 C# / WPF / .NET Framework 4.8 独立实现。
+本次多平台版本为 **v1.5.1**；Windows 按原要求保持 **v1.5.0**，其 C# / WPF / .NET Framework 4.8 程序未更换。npm 官方注册表仍是独立发布的 Windows v1.4.0；本次没有发布 npm 新版本。
+
+## 各系统下载
+
+前往 [v1.5.1 多平台发布页](https://github.com/yhc904444-eng/world-speace/releases/tag/v1.5.1)。按设备类型选择文件：
+
+| 系统 | 文件 | 状态及安装方式 |
+| --- | --- | --- |
+| Windows 10/11 | `world-speace_Windows_v1.5.0.zip` | 原版便携程序；解压运行，保留 UserData |
+| Android 8+ | `world-speace_Android_v1.5.1.apk` | 原签名修复版，直接覆盖安装 |
+| macOS Intel / Apple Silicon | `world-speace_macOS_x64_v1.5.1.dmg` / `world-speace_macOS_arm64_v1.5.1.dmg` | 原生桌面包；仅 ad hoc 签名，尚未 Developer ID 签名和公证 |
+| Linux x64 / arm64 | `world-speace_Linux_x64_v1.5.1.deb` / `world-speace_Linux_arm64_v1.5.1.deb` | 桌面安装包；另提供 tar.gz 便携包 |
+| iOS/iPadOS 16.4+ | `world-speace_iOS_v1.5.1-Source.zip`、`world-speace_iOS_v1.5.1-unsigned.ipa` | 真机代码已编译，最后需自己的 Apple Team、证书和 provisioning profile；未签名 IPA 不能直接安装 |
+| 网页 / PWA | `world-speace_Web_v1.5.1.zip` | 完整静态离线站点；HTTPS 部署后可添加到主屏幕 |
+| 全部源码 | `world-speace_All-Source_v1.5.1.zip` | 含完整词库、各端工程和构建说明，不含私钥和学习进度 |
+
+安装、存储位置、签名边界与构建方法见 [跨平台说明](cross-platform/README.md)。完整 JSON 备份可在各端手动迁移；它们不会自动同步或合并。
+
+本次逐平台验证、实际原生截图及尚未覆盖的设备范围见 [交付验证记录](docs/cross-platform-verification.md)。
 
 ## Android 单机版
 
-已新增 Android v1.5.1 本地构建：`release/world-speace_Android_v1.5.1.apk`，最低 Android 8.0。修复了 v1.5.0 APK 的词库路径问题；请直接覆盖安装以保留进度。包含离线词库、背词与复习、拼写、查词、收藏、自制词书、外观和 JSON 备份迁移。手机与 Windows v1.5.0 可通过完整备份手动迁移进度，不会自动同步。
+Android v1.5.1，最低 Android 8.0。修复了 v1.5.0 APK 的词库路径问题；请直接覆盖安装以保留进度。包含离线词库、背词与复习、拼写、查词、收藏、自制词书、外观和 JSON 备份迁移。手机与 Windows v1.5.0 可通过完整备份手动迁移进度，不会自动同步。
 
 Android 代码位于 `android/`，安装说明、构建方法和验证范围见 [Android 说明](android/README.md)。APK 已编译并校验签名；尚未完成真机或模拟器安装测试。Windows 程序保持 v1.5.0。
 
-## 下载与运行
+## Windows 下载与运行
 
-前往 [Releases 下载页面](https://github.com/yhc904444-eng/world-speace/releases/latest)，下载 `world-speace_Windows_v1.4.0.zip`，完整解压到有写入权限的文件夹，然后双击 `world speace.exe`。
+前往 [Releases 下载页面](https://github.com/yhc904444-eng/world-speace/releases/latest)，下载 `world-speace_Windows_v1.5.0.zip`，完整解压到有写入权限的文件夹，然后双击 `world speace.exe`。
 
-本地 v1.5.0 构建在 `release/world-speace_Windows_v1.5.0.zip`；本次外观更新需运行这份新版程序。下方公开下载和 npm 命令目前仍对应已发布的 v1.4.0。
+Windows v1.5.0 构建在 `release/world-speace_Windows_v1.5.0.zip`，与此前回退后程序的 SHA256 一致。下方 npm 官方源命令仍对应独立发布的 v1.4.0。
 
 支持安装有 .NET Framework 4.8 的 Windows 10 / 11。运行发行包不需要安装 Python、Node.js、Java 或开发工具。
 
@@ -32,11 +50,11 @@ world-speace
 已发布到 [npm 官方注册表](https://www.npmjs.com/package/world-speace)。命令显式使用官方源，避免新包尚未同步到其他镜像。也可从 GitHub 附件安装同一份包：
 
 ```powershell
-npm install -g https://github.com/yhc904444-eng/world-speace/releases/download/v1.4.0/world-speace-1.4.0.tgz
+npm install -g https://github.com/yhc904444-eng/world-speace/releases/download/v1.5.1/world-speace-1.5.0.tgz
 world-speace
 ```
 
-包直接包含 v1.4.0 的 Windows 程序，没有安装后下载脚本或第三方 Node.js 依赖，安装后可离线学习。仍需 .NET Framework 4.8。PowerShell 若阻止执行 `.ps1`，可使用 `npm.cmd` 和 `world-speace.cmd`。
+官方 npm 源包直接包含 v1.4.0 的 Windows 程序；上方 GitHub TGZ 链接则是 v1.5.0。两种包都没有安装后下载脚本或第三方 Node.js 依赖，安装后可离线学习。仍需 .NET Framework 4.8。PowerShell 若阻止执行 `.ps1`，可使用 `npm.cmd` 和 `world-speace.cmd`。
 
 默认学习记录保存到 `%LOCALAPPDATA%\world-speace\UserData`，更新/卸载 npm 包会保留这份独立数据。继续使用便携版原进度时，执行 `world-speace --data-dir "原来的 UserData 文件夹路径"`。运行 `world-speace --check` 可检查程序和数据路径。更多说明见 [npm 安装说明](npm/README.md)。
 
