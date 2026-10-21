@@ -53,6 +53,8 @@ for name, file in sorted(packages.items()):
             paths_are_public(entry.orig_filename for entry in archive.infolist())
             if "_macOS_" in name:
                 desktop_assets(archive.read("world speace.app/Contents/Resources/app.asar"))
+                binary = archive.read("world speace.app/Contents/MacOS/world-speace")
+                assert struct.unpack_from("<I", binary, 4)[0] == (0x100000C if "_arm64_" in name else 0x1000007), name
             elif "_iOS_" in name:
                 base = "Payload/WorldSpeace.app/"
                 assert archive.read(base + "www/data/words.tsv") == dictionary
@@ -78,6 +80,9 @@ for name, file in sorted(packages.items()):
             desktop_assets(archive.extractfile(app).read())
             binary = next(item for item in members if item.isfile() and item.name.endswith("/world-speace"))
             assert binary.mode & 0o005 == 0o005, "Installed executable is not readable/executable"
+            header = archive.extractfile(binary).read(64)
+            assert header[:4] == b"\x7fELF" and header[4:6] == b"\x02\x01", name
+            assert struct.unpack_from("<H", header, 18)[0] == (183 if "_arm64_" in name else 62), name
             for member in members:
                 if member.isdir():
                     assert member.mode & 0o005 == 0o005, ("Non-traversable package directory", member.name)
