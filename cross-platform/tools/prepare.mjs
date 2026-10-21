@@ -19,7 +19,7 @@ export function prepare(target,label){
     for(const name of ['NotoSansSC.ttf','OFL.txt','source.json']){const relative='fonts/'+name;fs.copyFileSync(path.join(root,'desktop/fonts',name),path.join(target,relative));prepared.push(relative);}
     const css=path.join(target,'app.css');
     const fontFace='@font-face{font-family:"World Speace CJK";src:url("fonts/NotoSansSC.ttf") format("truetype");font-style:normal;font-weight:100 900;font-display:block;}\n';
-    fs.writeFileSync(css,fs.readFileSync(css,'utf8').replace('@charset "UTF-8";','@charset "UTF-8";\n'+fontFace).replace('system-ui,-apple-system,"Noto Sans SC"','system-ui,-apple-system,"World Speace CJK","Noto Sans SC"'));
+    fs.writeFileSync(css,fs.readFileSync(css,'utf8').replace('@charset "UTF-8";','@charset "UTF-8";\n'+fontFace).replace('system-ui,-apple-system,"Noto Sans SC"','"World Speace CJK",system-ui,-apple-system,"Noto Sans SC"'));
   }
   if(fs.readFileSync(path.join(target,'domain.mjs'),'utf8').includes(`VERSION = '${version}'`)===false)throw new Error('Shared application version differs from cross-platform version');
   console.log('Prepared '+label+': '+target);
