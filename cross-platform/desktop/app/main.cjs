@@ -6,7 +6,7 @@ const smoke=process.argv.includes('--smoke-test');
 const reportArgument=process.argv.find(arg=>arg.startsWith('--smoke-report='));
 let win,store,picked=null,picking=false,lastExport=null;
 app.setName('world-speace');
-if(smoke)app.setPath('userData',fs.mkdtempSync(path.join(os.tmpdir(),'world-speace-smoke-')));
+if(smoke){app.disableHardwareAcceleration();app.setPath('userData',fs.mkdtempSync(path.join(os.tmpdir(),'world-speace-smoke-')));}
 protocol.registerSchemesAsPrivileged([{scheme:'worldspeace',privileges:{standard:true,secure:true,supportFetchAPI:true,corsEnabled:true}}]);
 const authorized=event=>event.sender===win?.webContents&&event.senderFrame?.url===START;
 const emit=detail=>{if(win&&!win.isDestroyed())win.webContents.send('world-speace:result',detail);};
@@ -81,6 +81,6 @@ app.whenReady().then(async()=>{
   win.webContents.on('will-attach-webview',event=>event.preventDefault());
   Menu.setApplicationMenu(Menu.buildFromTemplate(process.platform==='darwin'?[{label:'world speace',submenu:[{role:'about'},{role:'hide'},{role:'quit'}]},{role:'editMenu'},{role:'windowMenu'}]:[{role:'editMenu'},{role:'windowMenu'}]));
   bindBridge();await win.loadURL(START);
-  if(smoke){try{const result=await runSmoke();const output=reportArgument?.slice('--smoke-report='.length);if(output){fs.mkdirSync(path.dirname(output),{recursive:true});fs.writeFileSync(output,JSON.stringify(result,null,2));fs.writeFileSync(output.replace(/\.json$/,'.png'),(await win.webContents.capturePage()).toPNG());}console.log(JSON.stringify(result));app.exit(0);}catch(error){console.error(error);app.exit(1);}}
+  if(smoke){win.show();try{const result=await runSmoke();const output=reportArgument?.slice('--smoke-report='.length);if(output){fs.mkdirSync(path.dirname(output),{recursive:true});fs.writeFileSync(output,JSON.stringify(result,null,2));fs.writeFileSync(output.replace(/\.json$/,'.png'),(await win.webContents.capturePage()).toPNG());}console.log(JSON.stringify(result));app.exit(0);}catch(error){console.error(error);app.exit(1);}}
 }).catch(error=>{console.error(error);app.exit(1);});
 app.on('window-all-closed',()=>app.quit());
