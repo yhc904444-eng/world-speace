@@ -1,0 +1,65 @@
+{
+  "name": "ECDICT offline learning subset",
+  "repository": "https://github.com/skywind3000/ECDICT",
+  "commit": null,
+  "downloaded_at_utc": "2026-10-15T12:07:35.032950+00:00",
+  "license": "MIT",
+  "source_url": "https://raw.githubusercontent.com/skywind3000/ECDICT/master/ecdict.csv",
+  "source_sha256": "1a6947e04785db63613a92e14903cdae7954f7e84860b10e68e5c7cbb3f9c3cf",
+  "license_sha256": "f8552dd246f61a4e064569eae6194a01c6b3d63b03bf27c6ca863593c549ed0f",
+  "output": "words.tsv",
+  "output_sha256": "f947bb2d701bc57559058614df93aa1ff277ad6d5749f7000e2b573be496221a",
+  "encoding": "UTF-8 without BOM",
+  "header": false,
+  "columns": [
+    "id",
+    "word",
+    "phonetic",
+    "translation",
+    "definition",
+    "tags",
+    "rank",
+    "exchange"
+  ],
+  "line_break_encoding": "literal backslash followed by n",
+  "selection": {
+    "word_pattern": "[A-Za-z]+(?:[ '-][A-Za-z]+)*\\Z",
+    "requires_chinese_translation": true,
+    "include_exam_tags": [
+      "zk",
+      "gk",
+      "cet4",
+      "cet6",
+      "ky",
+      "ielts",
+      "toefl",
+      "gre"
+    ],
+    "or_top_frequency": 10000,
+    "frequency_scope": "Either positive frq or bnc rank <= 10000",
+    "rank": "positive frq, else positive bnc, else 999999",
+    "deduplication": "lowercase word id; prefer more exam tags, then lower rank, then longer translation",
+    "maximum_rows": 50000
+  },
+  "counts": {
+    "source_rows": 770611,
+    "excluded_nonstandard_word": 11744,
+    "excluded_outside_learning_scope": 737820,
+    "excluded_no_chinese_translation": 2900,
+    "eligible_unique_rows": 18147,
+    "excluded_by_50000_cap": 0
+  },
+  "output_rows": 18147,
+  "tag_counts": {
+    "zk": 1601,
+    "gk": 3674,
+    "cet4": 3846,
+    "cet6": 5406,
+    "ky": 4801,
+    "ielts": 5040,
+    "toefl": 6974,
+    "gre": 7504
+  },
+  "source_ref": "master",
+  "commit_note": "GitHub API rate limit prevented resolving master; source_sha256 identifies the exact downloaded CSV."
+}

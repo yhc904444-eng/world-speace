@@ -1,0 +1,34 @@
+async () => {
+  const passed=[];const assert=(value,message)=>{if(!value)throw new Error(message);passed.push(message);};
+  const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+  const click=selector=>{const el=document.querySelector(selector);if(!el)throw new Error('Missing '+selector);el.click();};
+  const change=(id,value)=>{const el=document.getElementById(id);if(!el)throw new Error('Missing #'+id);el.value=value;el.dispatchEvent(new Event('change',{bubbles:true}));};
+  const read=()=>JSON.parse(localStorage.getItem('world-speace.android.v1'));
+  assert(document.documentElement.dataset.ready==='true','app loads all offline assets');
+  assert(innerWidth===390&&!document.documentElement.dataset.error,'390px phone viewport loads without startup error');
+  assert(document.documentElement.scrollWidth<=innerWidth,'home has no horizontal overflow');
+  click('[data-action="start-new"]');assert(!!document.querySelector('.word-card'),'new-word button opens study');
+  const word=document.querySelector('.word').textContent;
+  click('[data-action="reveal"]');assert(document.querySelectorAll('[data-action="grade"]').length===3,'reveal exposes all three recall grades');
+  click('[data-grade="2"]');let data=read();const first=data.Cards.find(c=>c.Key===word);assert(first&&first.Value.Reviews===1,'answer is saved immediately');
+  assert(Math.abs(Date.parse(first.Value.Due)-Date.parse(first.Value.LastReview)-600000)<10,'new word schedules ten-minute consolidation');
+  click('[data-action="today"]');assert(document.querySelector('.metric strong').textContent==='01','home new-word count updates after answer');
+  click('[data-action="settings"]');change('DailyTarget','30');change('PageStyle','luminous');change('GlassDensity','clear');change('LuminousIntensity','vivid');click('[data-action="palette"][data-id="ocean"]');
+  data=read();assert(data.DailyTarget===30&&data.PageStyle==='luminous'&&data.PagePalette==='ocean'&&data.GlassDensity==='clear'&&data.LuminousIntensity==='vivid','learning and appearance preferences save through controls');
+  assert(document.body.dataset.style==='luminous'&&getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()==='#35638D','theme actually applies to page');
+  change('PageStyle','solid');assert(document.getElementById('GlassDensity').disabled&&document.getElementById('LuminousIntensity').disabled,'solid mode disables glass and luminous settings');
+  click('[data-action="books"]');assert(document.querySelectorAll('.book-row').length===9,'all nine books are selectable');click('[data-action="select-book"][data-id="gre"]');assert(read().SelectedBook==='gre','book selection is saved');
+  click('[data-action="dictionary"]');let search=document.getElementById('search');search.value='apple';search.dispatchEvent(new Event('input',{bubbles:true}));await wait(180);
+  assert(document.querySelector('.word-row strong').textContent==='apple','offline exact search is first');click('.word-row');assert(document.getElementById('modal').open&&document.querySelector('#modal-content h2').textContent==='apple','word detail opens in mobile dialog');
+  click('[data-action="word-favorite"]');assert(read().Favorites.includes('apple'),'favorite toggles through detail dialog');click('[data-action="word-exclude"]');assert(read().ExcludedWords.includes('apple'),'never-review action persists');click('[data-action="word-exclude"]');assert(!read().ExcludedWords.includes('apple'),'restore review preserves original record');click('[data-action="close-modal"]');
+  click('[data-action="today"]');click('[data-action="start-spelling"]');assert(!!document.querySelector('#spell-answer'),'spelling opens touch-friendly answer input');const before=JSON.stringify(read().Cards);document.getElementById('spell-answer').value='wrong answer';click('[data-action="check-spelling"]');data=read();assert(data.History.at(-1).Spelling&&data.History.at(-1).Grade===0&&JSON.stringify(data.Cards)===before,'wrong spelling logs separately without changing review schedule');
+  click('[data-action="next-card"]');assert(!!document.querySelector('#spell-answer'),'spelling advances to next word');
+  click('[data-action="today"]');click('[data-action="settings"]');change('PageStyle','glass');change('GlassDensity','low');click('[data-action="palette"][data-id="bamboo"]');
+  const input=document.getElementById('file-picker'),transfer=new DataTransfer();transfer.items.add(new File(['word,translation,example,example_translation\nresilient,有韧性的,Keep trying.,继续尝试。\n"<img src=x onerror=alert(1)>",测试文本,,'],'手机测试词书.csv',{type:'text/csv'}));input.files=transfer.files;input.dispatchEvent(new Event('change'));await wait(60);
+  assert(document.querySelector('#modal-content h2').textContent==='导入自制词书？','CSV import asks for reviewable confirmation');click('[data-action="confirm"]');await wait(20);data=read();assert(data.CustomBooks.length===1&&data.CustomWords.length===2,'CSV file change imports custom list');assert(data.SelectedBook===data.CustomBooks[0].Id,'imported word book becomes selected');
+  click('[data-action="dictionary"]');search=document.getElementById('search');search.value='<img';search.dispatchEvent(new Event('input',{bubbles:true}));await wait(180);assert(document.querySelector('.word-row strong').textContent==='<img src=x onerror=alert(1)>','imported HTML-like text displays literally');assert(document.querySelectorAll('#word-results img').length===0,'imported text cannot create executable HTML');
+  click('[data-action="mine"]');click('[data-action="stats"]');assert(!!document.querySelector('.chart')&&document.querySelector('.history-row'),'statistics reflect saved answers');
+  assert(document.documentElement.scrollWidth<=innerWidth,'statistics have no horizontal overflow');
+  assert(window.WorldSpeace.back()===true&&document.querySelector('.focus-card'),'Android back handler returns to home');
+  return {passed,count:passed.length,storedCards:read().Cards.length,history:read().History.length,viewport:{width:innerWidth,height:innerHeight}};
+}

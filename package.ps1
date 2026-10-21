@@ -13,7 +13,7 @@ $template = "word,translation,phonetic,definition,example,example_translation`r`
 [IO.File]::WriteAllText((Join-Path $appDir '自制词书模板.csv'),$template,[Text.UTF8Encoding]::new($true))
 $exeHash = (Get-FileHash -LiteralPath (Join-Path $appDir 'world speace.exe') -Algorithm SHA256).Hash
 [IO.File]::WriteAllText((Join-Path $appDir 'SHA256.txt'),($exeHash + '  world speace.exe' + [Environment]::NewLine),[Text.UTF8Encoding]::new($false))
-$zipPath = Join-Path $releaseRoot 'world-speace_Windows_v1.4.0.zip'
+$zipPath = Join-Path $releaseRoot 'world-speace_Windows_v1.5.0.zip'
 # Explicit file allowlist: a used portable directory can contain private UserData.
 # Never include that directory or its learning records in a distributable archive.
 $packageNames = @('world speace.exe','world speace.exe.config','ECDICT-LICENSE.txt','FSRS-MIT.txt','source.json','使用说明.md','语境示例30词.tsv','自制词书模板.csv','SHA256.txt')

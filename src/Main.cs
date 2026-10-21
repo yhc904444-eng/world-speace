@@ -19,6 +19,7 @@ namespace LexisDesk {
     public class MainWindow : Window {
         public readonly Store Store;
         Grid shell;
+        PageGlassBackdrop backdrop;
         StackPanel nav;
         ContentControl body;
         TextBlock status;
@@ -51,7 +52,7 @@ namespace LexisDesk {
             PreviewKeyDown+=KeyHandler;
             reviewTimer=new DispatcherTimer{Interval=TimeSpan.FromSeconds(15)};
             reviewTimer.Tick+=delegate{if(page=="today"&&Store.DueCount(DateTime.Now)!=shownDueCount)ShowToday();};reviewTimer.Start();
-            Closed+=delegate {ReleaseSpeech();reviewTimer.Stop();};
+            Closed+=delegate {ReleaseSpeech();reviewTimer.Stop();backdrop.Release();};
         }
         public static SolidColorBrush Brush(string hex) {return (SolidColorBrush)new BrushConverter().ConvertFromString(hex);}
         static void Paint(FrameworkElement element,DependencyProperty property,string color) {
@@ -98,12 +99,12 @@ namespace LexisDesk {
         }
         void BuildShell() {
             shell=new Grid();Paint(shell,Panel.BackgroundProperty,"PageFill");shell.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(205)});shell.ColumnDefinitions.Add(new ColumnDefinition());
-            var backdrop=new PageGlassBackdrop();Grid.SetColumnSpan(backdrop,2);shell.Children.Add(backdrop);
+            backdrop=new PageGlassBackdrop();backdrop.Configure(Store.Data);Grid.SetColumnSpan(backdrop,2);shell.Children.Add(backdrop);
             var sidebar=new Grid();sidebar.RowDefinitions.Add(new RowDefinition{Height=GridLength.Auto});sidebar.RowDefinitions.Add(new RowDefinition());sidebar.RowDefinitions.Add(new RowDefinition{Height=GridLength.Auto});
             var sidebarSurface=new Border{CornerRadius=new CornerRadius(0,22,22,0)};Paint(sidebarSurface,Border.BackgroundProperty,"SidebarFill");Paint(sidebarSurface,Border.BorderBrushProperty,"CardEdge");sidebarSurface.SetResourceReference(Border.BorderThicknessProperty,"CardStroke");Grid.SetRowSpan(sidebarSurface,3);sidebar.Children.Add(sidebarSurface);
             var brand=Stack(Text("world speace",22,"OnAccent",true),Text("OFFLINE VOCABULARY",10,"NavMuted"));brand.Margin=new Thickness(28,32,20,34);sidebar.Children.Add(brand);
             nav=new StackPanel{Margin=new Thickness(14,0,12,0)};Grid.SetRow(nav,1);sidebar.Children.Add(nav);
-            var foot=Stack(Text("每次记住一点点。",14,"NavMuted"),Text("独立单机版  v1.4.0\n学习记录只保存在本机",11,"NavMuted"));foot.Margin=new Thickness(26,24,16,28);Grid.SetRow(foot,2);sidebar.Children.Add(foot);
+            var foot=Stack(Text("每次记住一点点。",14,"NavMuted"),Text("独立单机版  v1.5.0\n学习记录只保存在本机",11,"NavMuted"));foot.Margin=new Thickness(26,24,16,28);Grid.SetRow(foot,2);sidebar.Children.Add(foot);
             shell.Children.Add(sidebar);
             var main=new Grid{Margin=new Thickness(36,27,32,15)};main.RowDefinitions.Add(new RowDefinition{Height=GridLength.Auto});main.RowDefinitions.Add(new RowDefinition());main.RowDefinitions.Add(new RowDefinition{Height=GridLength.Auto});
             var top=new DockPanel{Margin=Gap(0,24)};var date=Text(DateTime.Now.ToString("yyyy年M月d日  dddd",new CultureInfo("zh-CN")),12,"Muted");DockPanel.SetDock(date,Dock.Right);top.Children.Add(date);top.Children.Add(Text("给记忆留一点空间",12,"Muted"));main.Children.Add(top);
@@ -274,22 +275,28 @@ namespace LexisDesk {
             var prefs=Stack(Text("每日新词目标",16,null,true),WithMargin(target,14,0),auto,Text("离线英语语音",13,"Muted"),WithMargin(voice,10,20));prefs.Children.Add(Row(Button("保存设置",()=>{Store.Data.DailyTarget=(int)target.SelectedItem;Store.Data.AutoSpeak=auto.IsChecked==true;Store.Data.Voice=voice.SelectedIndex>0?(string)voice.SelectedItem:null;Store.Save();status.Text="设置已保存。";},true),Button("试听",()=>{Store.Data.Voice=voice.SelectedIndex>0?(string)voice.SelectedItem:null;Speak("A little progress every day.");})));p.Children.Add(Card(prefs));
             var backup=Stack(Text("给进度留一份备份",18,null,true),WithMargin(Text("导出的 JSON 包含学习记录、收藏、设置和自制词书。恢复会替换当前数据，软件会先保留恢复前的副本。",13,"Muted"),10,20),Row(Button("导出完整备份",Backup,true),Button("恢复备份",Restore)));var backupCard=Card(backup);backupCard.Margin=Gap(20,20);p.Children.Add(backupCard);
             p.Children.Add(Text("数据文件夹",12,"Muted"));p.Children.Add(WithMargin(new TextBox{Text=Store.DirectoryPath,IsReadOnly=true,FontSize=12},8,18));
-            p.Children.Add(Text("关于这个版本",16,null,true));p.Children.Add(WithMargin(Text("world speace 1.4.0 · 根据单机学习需求独立制作，并非不背单词官方客户端。\n内置词库：ECDICT（MIT 许可）。不包含原应用账号、云端学习记录、影视原声和付费词典。\n内置词条提供释义与词形；双语例句可随自制词书导入。发音使用 Windows 本地英语语音。\n词表来源、筛选规则和许可证随发行包提供。",12,"Muted"),10,18));body.Content=Scroll(p);
+            p.Children.Add(Text("关于这个版本",16,null,true));p.Children.Add(WithMargin(Text("world speace 1.5.0 · 根据单机学习需求独立制作，并非不背单词官方客户端。\n内置词库：ECDICT（MIT 许可）。不包含原应用账号、云端学习记录、影视原声和付费词典。\n内置词条提供释义与词形；双语例句可随自制词书导入。发音使用 Windows 本地英语语音。\n词表来源、筛选规则和许可证随发行包提供。",12,"Muted"),10,18));body.Content=Scroll(p);
         }
-        public void RefreshAppearance(){Appearance.Apply(Resources,Store.Data);}
+        public void RefreshAppearance(){Appearance.Apply(Resources,Store.Data);backdrop.Configure(Store.Data);}
         UIElement AppearanceOptions() {
             var palette=new ComboBox{Name="PagePaletteChoice",Width=240,ItemsSource=Appearance.Palettes,DisplayMemberPath="Name",SelectedItem=Appearance.Palette(Store.Data.PagePalette),HorizontalAlignment=HorizontalAlignment.Left};
-            var style=new ComboBox{Name="PageStyleChoice",Width=240,ItemsSource=new[]{"液态玻璃","简洁纯色"},SelectedIndex=Store.Data.PageStyle=="solid"?1:0,HorizontalAlignment=HorizontalAlignment.Left};
+            var style=new ComboBox{Name="PageStyleChoice",Width=240,ItemsSource=Appearance.StyleNames,SelectedIndex=Array.IndexOf(Appearance.StyleIds,Store.Data.PageStyle),HorizontalAlignment=HorizontalAlignment.Left};
+            var density=new ComboBox{Name="GlassDensityChoice",Width=240,ItemsSource=Appearance.DensityNames,SelectedIndex=Array.IndexOf(Appearance.DensityIds,Store.Data.GlassDensity),HorizontalAlignment=HorizontalAlignment.Left};
+            var intensity=new ComboBox{Name="LuminousIntensityChoice",Width=240,ItemsSource=Appearance.IntensityNames,SelectedIndex=Array.IndexOf(Appearance.IntensityIds,Store.Data.LuminousIntensity),HorizontalAlignment=HorizontalAlignment.Left};
+            var motion=new CheckBox{Name="LuminousMotionChoice",Content="让流光缓慢流动",IsChecked=Store.Data.LuminousMotion,Margin=Gap(0,10)};
             System.Windows.Automation.AutomationProperties.SetName(palette,"页面颜色");System.Windows.Automation.AutomationProperties.SetName(style,"页面风格");
-            var choices=Wrap(Stack(Text("页面颜色",13,"Muted"),WithMargin(palette,9,0)),Stack(Text("页面风格",13,"Muted"),WithMargin(style,9,0)));choices.Margin=Gap(18,12);
+            System.Windows.Automation.AutomationProperties.SetName(density,"玻璃透明度");System.Windows.Automation.AutomationProperties.SetName(intensity,"流光强度");
+            var choices=Wrap(Stack(Text("页面颜色",13,"Muted"),WithMargin(palette,9,0)),Stack(Text("页面风格",13,"Muted"),WithMargin(style,9,0)),Stack(Text("玻璃透明度",13,"Muted"),WithMargin(density,9,0)),Stack(Text("流光强度",13,"Muted"),WithMargin(intensity,9,0)));choices.Margin=Gap(18,8);
+            var preview=Text("",12,"Muted");
+            Action sync=()=>{bool glow=Store.Data.PageStyle=="luminous";density.IsEnabled=Store.Data.PageStyle!="solid";intensity.IsEnabled=glow;motion.IsEnabled=glow;preview.Text=glow?"Immersive Luminous Experience · 沉浸流光\n光晕与柔亮边缘随配色变化；窗口失焦、最小化或系统关闭动画时，流光保持静止。":"默认采用低透明，让卡片更实、文字更清楚。纯色风格不使用玻璃透明度。";};sync();
             bool updating=false;
             Action apply=()=>Safe(()=>{
-                if(updating||palette.SelectedItem==null||style.SelectedIndex<0)return;
-                try{Store.SetAppearance(((PagePalette)palette.SelectedItem).Id,style.SelectedIndex==1?"solid":"glass");RefreshAppearance();status.Text="外观已保存，重启后仍会使用当前颜色与页面风格。";}
-                catch{updating=true;try{palette.SelectedItem=Appearance.Palette(Store.Data.PagePalette);style.SelectedIndex=Store.Data.PageStyle=="solid"?1:0;}finally{updating=false;}throw;}
+                if(updating||palette.SelectedItem==null||style.SelectedIndex<0||density.SelectedIndex<0||intensity.SelectedIndex<0)return;
+                try{Store.SetAppearance(((PagePalette)palette.SelectedItem).Id,Appearance.StyleIds[style.SelectedIndex],Appearance.DensityIds[density.SelectedIndex],Appearance.IntensityIds[intensity.SelectedIndex],motion.IsChecked==true);RefreshAppearance();sync();status.Text="外观已保存："+Appearance.StyleNames[style.SelectedIndex]+"，重启后仍会保留。";}
+                catch{updating=true;try{palette.SelectedItem=Appearance.Palette(Store.Data.PagePalette);style.SelectedIndex=Array.IndexOf(Appearance.StyleIds,Store.Data.PageStyle);density.SelectedIndex=Array.IndexOf(Appearance.DensityIds,Store.Data.GlassDensity);intensity.SelectedIndex=Array.IndexOf(Appearance.IntensityIds,Store.Data.LuminousIntensity);motion.IsChecked=Store.Data.LuminousMotion;sync();}finally{updating=false;}throw;}
             });
-            palette.SelectionChanged+=delegate{apply();};style.SelectionChanged+=delegate{apply();};
-            var card=Card(Stack(Text("外观与配色",18,null,true),WithMargin(Text("喜欢透亮的玻璃质感，或更安静的纯色页面，都由你选择。",13,"Muted"),9,0),choices,Text("选择后立即生效并自动保存，无需重启。",12,"Muted")));card.Margin=Gap(0,20);return card;
+            palette.SelectionChanged+=delegate{apply();};style.SelectionChanged+=delegate{apply();};density.SelectionChanged+=delegate{apply();};intensity.SelectionChanged+=delegate{apply();};motion.Checked+=delegate{apply();};motion.Unchecked+=delegate{apply();};
+            var card=Card(Stack(Text("外观与配色",18,null,true),WithMargin(Text("更实的玻璃，安静的纯色，或柔和流动的光，由你选择。",13,"Muted"),9,0),choices,motion,preview,WithMargin(Text("选择后立即生效并自动保存，不改变学习与复习记录。",12,"Muted"),10,0)));card.Margin=Gap(0,20);return card;
         }
         void Backup(){var d=new SaveFileDialog{FileName="world speace 备份-"+DateTime.Now.ToString("yyyyMMdd")+".json",Filter="JSON 备份|*.json"};if(d.ShowDialog(this)==true){JsonIO.Write(d.FileName,Store.Data);status.Text="完整备份已导出。";}}
         void Restore(){var d=new OpenFileDialog{Filter="JSON 备份|*.json",Title="选择world speace备份"};if(d.ShowDialog(this)!=true)return;Store.Validate(JsonIO.Read<UserData>(d.FileName));if(MessageBox.Show(this,"将用备份替换当前学习记录、收藏和自制词书。恢复前的记录会自动另存副本。继续吗？","恢复学习记录",MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes)return;Store.Restore(d.FileName);RefreshAppearance();ShowSettings();status.Text="备份已恢复。";}

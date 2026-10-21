@@ -2,6 +2,8 @@
 
 Windows 单机背词应用，包含离线词库、FSRS-6 复习、拼写、收藏、永不复习和液态玻璃外观。npm 包直接携带 Windows 程序，不在安装后运行额外下载脚本，无第三方 Node.js 依赖。
 
+本地源码版本为 **1.5.0**，增加四档玻璃透明度、沉浸流光风格、三档光效强度和动态开关；此版本尚未发布。下面的 GitHub 下载示例仍指向已发布的 1.4.0。使用本地新版时，在项目根目录执行 `npm.cmd install --global ".\release\world-speace-1.5.0.tgz"`，再运行 `world-speace.cmd`。
+
 需要 **Windows 10/11、.NET Framework 4.8、Node.js 20 或更新版本**。
 
 ## 安装和启动

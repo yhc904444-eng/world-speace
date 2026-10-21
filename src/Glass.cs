@@ -16,6 +16,7 @@ namespace LexisDesk {
             public double X,Y,Seconds;
         }
         readonly List<Drift> drifts=new List<Drift>();
+        readonly Grid lens;
         public bool HasActiveAnimations {get{return drifts.Exists(item=>item.Transform.HasAnimatedProperties);}}
         internal static LinearGradientBrush Gradient(Point start,Point end,params string[] colors) {
             var brush=new LinearGradientBrush{StartPoint=start,EndPoint=end};
@@ -37,7 +38,7 @@ namespace LexisDesk {
         public LiquidGlassPanel() {
             IsHitTestVisible=false;
             Children.Add(new Border{CornerRadius=new CornerRadius(32),Background=MainWindow.Brush("#38EEF7F0"),Effect=new DropShadowEffect{BlurRadius=25,ShadowDepth=8,Opacity=.19,Color=Color.FromRgb(15,57,43)}});
-            var lens=new Grid{Background=Gradient(new Point(0,0),new Point(.9,1),"#DDF6FFF9","#B8E6F3EF","#E6F3F8ED")};RoundClip(lens,32);Children.Add(lens);
+            lens=new Grid();SetDensity("low");RoundClip(lens,32);Children.Add(lens);
             var lights=new Canvas();lens.Children.Add(lights);
             var mint=new Ellipse{Width=390,Height=300,Fill=Glow("#995CBFA2")};Canvas.SetLeft(mint,-130);Canvas.SetTop(mint,-75);lights.Children.Add(mint);AddDrift(mint,60,35,2.6);
             var aqua=new Ellipse{Width=370,Height=345,Fill=Glow("#7046A6AB")};Canvas.SetLeft(aqua,330);Canvas.SetTop(aqua,80);lights.Children.Add(aqua);AddDrift(aqua,-48,-30,3.1);
@@ -54,6 +55,10 @@ namespace LexisDesk {
             // little thickness while leaving the content area quiet.
             var rim=new Border{Height=2,Margin=new Thickness(33,1,33,0),VerticalAlignment=VerticalAlignment.Top,Background=Gradient(new Point(0,0),new Point(1,0),"#00FFFFFF","#EEFFFFFF","#00FFFFFF")};Children.Add(rim);
             Loaded+=delegate{Start();};Unloaded+=delegate{Stop();};
+        }
+        public void SetDensity(string density) {
+            string alpha=Appearance.SurfaceAlpha(density).ToString("X2");
+            lens.Background=Gradient(new Point(0,0),new Point(.9,1),"#FCF6FFF9","#"+alpha+"E6F3EF","#FCF3F8ED");
         }
         public void Start() {
             Stop();if(!Motion.Enabled||(RenderCapability.Tier>>16)==0)return;

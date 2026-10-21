@@ -1,6 +1,6 @@
 {
   "name": "world-speace",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Windows offline vocabulary study app with FSRS-6 spaced review",
   "license": "UNLICENSED",
   "bin": { "world-speace": "bin/world-speace.cjs" },
@@ -14,7 +14,7 @@
   "publishConfig": { "access": "public", "registry": "https://registry.npmjs.org/" },
   "scripts": { "prepack": "node scripts/prepare.cjs", "test": "node --test test/*.test.cjs" },
   "worldSpeace": {
-    "appVersion": "1.4.0",
-    "exeSha256": "4bb70eb5b1aa9fd7176d59ccd124d981e90bdb5f50205bdfbaaf33a69bc98caa"
+    "appVersion": "1.5.0",
+    "exeSha256": "fe6a32a29e0481a716b16db3ffb60e06836b578113301a2ac35959680768d000"
   }
 }

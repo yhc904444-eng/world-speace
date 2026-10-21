@@ -34,8 +34,8 @@
         </Border>
       </Grid>
       <ControlTemplate.Triggers>
-        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="MotionSurface" Property="Opacity" Value="0.82"/></Trigger>
-        <Trigger Property="IsPressed" Value="True"><Setter TargetName="MotionSurface" Property="Opacity" Value="0.62"/></Trigger>
+        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="MotionSurface" Property="Opacity" Value="0.94"/></Trigger>
+        <Trigger Property="IsPressed" Value="True"><Setter TargetName="MotionSurface" Property="Opacity" Value="0.88"/></Trigger>
         <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="MotionSurface" Property="BorderBrush" Value="{DynamicResource Accent}"/><Setter TargetName="MotionSurface" Property="BorderThickness" Value="2"/></Trigger>
         <Trigger Property="IsEnabled" Value="False"><Setter Property="Foreground" Value="{DynamicResource Muted}"/><Setter TargetName="MotionSurface" Property="Opacity" Value="0.45"/></Trigger>
       </ControlTemplate.Triggers>

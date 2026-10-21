@@ -90,7 +90,7 @@ namespace LexisDesk {
             var store=await Task.Run(()=>new Store(directory,splash.Report));
             var window=await splash.Dispatcher.InvokeAsync(()=>{
                 if(splash.WasClosed)throw new OperationCanceledException();
-                splash.Report(95,"正在准备学习界面…");var prepared=new MainWindow(store);splash.Report(100,"准备就绪");return prepared;
+                splash.Glass.SetDensity(store.Data.GlassDensity);splash.Report(95,"正在准备学习界面…");var prepared=new MainWindow(store);splash.Report(100,"准备就绪");return prepared;
             }).Task;
             // Let the requested logo entrance finish; never invent loading work.
             int remaining=Motion.Enabled?1050-(int)stopwatch.ElapsedMilliseconds:0;

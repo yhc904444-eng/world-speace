@@ -1,0 +1,17 @@
+{
+  "name": "world-speace-platforms",
+  "version": "1.5.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:assets": "node tools/prepare.mjs",
+    "test": "node --test tests/*.test.mjs ../android/tests/core.test.mjs",
+    "package:desktop": "node tools/package-desktop.mjs",
+    "package:web": "node tools/package-web.mjs"
+  },
+  "devDependencies": {
+    "@electron/asar": "4.3.1",
+    "@electron/packager": "20.3.0",
+    "electron": "45.0.0"
+  }
+}

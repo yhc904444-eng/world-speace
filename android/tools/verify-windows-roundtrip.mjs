@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import { Store, parseDictionary } from '../app/src/main/assets/domain.mjs';
+const words=parseDictionary(fs.readFileSync(new URL('../app/src/main/assets/data/words.tsv',import.meta.url),'utf8'));
+const original=JSON.parse(fs.readFileSync(new URL('../verification/cross-platform/android-backup.json',import.meta.url),'utf8'));
+const returned=JSON.parse(fs.readFileSync(new URL('../verification/cross-platform/windows-roundtrip.json',import.meta.url),'utf8'));
+const store=new Store(words,returned),originalCards=Object.fromEntries(original.Cards.map(c=>[c.Key,c.Value]));
+for(const [id,c] of Object.entries(originalCards))for(const field of ['Due','LastReview','Stability','Difficulty','Reviews','Lapses','Stage','SchedulerVersion'])assert.equal(store.data.Cards[id][field],c[field],id+': '+field);
+assert.equal(store.data.History.length,3);assert.equal(store.data.CustomBooks[0].Name,'手机词书');assert.equal(store.words.get('custom:resilient').ExampleTranslation,'继续尝试。');assert.equal(store.isExcluded('might'),true);assert.equal(store.data.PagePalette,'lilac');assert.equal(store.data.LuminousMotion,false);
+console.log('PASS: Android reads Windows re-export; 2 review cards, 3 answers, custom examples, exclusions and preferences remain intact.');

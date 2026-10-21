@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import { Store, parseDictionary, serialize } from '../app/src/main/assets/domain.mjs';
+const words=parseDictionary(fs.readFileSync(new URL('../app/src/main/assets/data/words.tsv',import.meta.url),'utf8'));
+const store=new Store(words),date=new Date('2026-10-21T12:00:00+08:00');
+store.grade('state',2,false,date);store.grade('state',2,false,new Date(+date+60000),true);
+store.import('word,translation,phonetic,example,example_translation\nresilient,有韧性的,rɪˈzɪliənt,Keep trying.,继续尝试。','手机词书');
+store.grade('custom:resilient',0,false,date);store.exclude('might');store.settings({PagePalette:'lilac',PageStyle:'luminous',DailyTarget:30,LuminousMotion:false});
+fs.mkdirSync(new URL('../verification/cross-platform/',import.meta.url),{recursive:true});
+fs.writeFileSync(new URL('../verification/cross-platform/android-backup.json',import.meta.url),serialize(store.data));
+console.log('Generated Android backup fixture with 2 cards, 3 answer logs and 1 custom book.');

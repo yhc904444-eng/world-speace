@@ -1,0 +1,6 @@
+{
+  "id": "./", "name": "world speace · 离线词汇学习", "short_name": "world speace",
+  "lang": "zh-CN", "start_url": "./", "scope": "./", "display": "standalone",
+  "background_color": "#F1F6F2", "theme_color": "#2D6A55",
+  "icons": [{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]
+}

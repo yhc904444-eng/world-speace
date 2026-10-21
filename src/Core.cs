@@ -67,6 +67,10 @@ namespace LexisDesk {
         [DataMember] public List<string> ExcludedWords = new List<string>();
         [DataMember] public string PagePalette = "bamboo";
         [DataMember] public string PageStyle = "glass";
+        [DataMember] public string GlassDensity = "low";
+        [DataMember] public string LuminousIntensity = "soft";
+        [DataMember] public bool LuminousMotion = true;
+        [OnDeserializing] void PrepareAppearance(StreamingContext context) { LuminousMotion=true; }
         [OnDeserialized] void ReadLegacyData(StreamingContext context) {
             if(ExcludedWords==null)ExcludedWords=new List<string>();
             Appearance.Normalize(this);
@@ -137,10 +141,13 @@ namespace LexisDesk {
         public void MergeCustom() { foreach(var w in Data.CustomWords) Words[w.Id]=w; standardBooks=null; }
         public void Save() { Validate(Data); JsonIO.Write(StatePath,Data); }
         public void SetAppearance(string palette,string style) {
-            string beforePalette=Data.PagePalette,beforeStyle=Data.PageStyle;
-            Data.PagePalette=palette;Data.PageStyle=style;Appearance.Normalize(Data);
-            if(beforePalette==Data.PagePalette&&beforeStyle==Data.PageStyle)return;
-            try{Save();}catch{Data.PagePalette=beforePalette;Data.PageStyle=beforeStyle;throw;}
+            SetAppearance(palette,style,Data.GlassDensity,Data.LuminousIntensity,Data.LuminousMotion);
+        }
+        public void SetAppearance(string palette,string style,string density,string intensity,bool motion) {
+            string beforePalette=Data.PagePalette,beforeStyle=Data.PageStyle,beforeDensity=Data.GlassDensity,beforeIntensity=Data.LuminousIntensity;bool beforeMotion=Data.LuminousMotion;
+            Data.PagePalette=palette;Data.PageStyle=style;Data.GlassDensity=density;Data.LuminousIntensity=intensity;Data.LuminousMotion=motion;Appearance.Normalize(Data);
+            if(beforePalette==Data.PagePalette&&beforeStyle==Data.PageStyle&&beforeDensity==Data.GlassDensity&&beforeIntensity==Data.LuminousIntensity&&beforeMotion==Data.LuminousMotion)return;
+            try{Save();}catch{Data.PagePalette=beforePalette;Data.PageStyle=beforeStyle;Data.GlassDensity=beforeDensity;Data.LuminousIntensity=beforeIntensity;Data.LuminousMotion=beforeMotion;throw;}
         }
         static string WordKey(string text) {return text.Trim().ToLowerInvariant();}
         void RebuildExclusions() {

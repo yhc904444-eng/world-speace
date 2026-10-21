@@ -1,0 +1,86 @@
+name: Cross-platform packages
+on:
+  push:
+    branches: [main, 'multiplatform-*']
+    paths: ['cross-platform/**', 'android/**', '.github/workflows/cross-platform.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: {node-version: '24', cache: npm, cache-dependency-path: cross-platform/package-lock.json}
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+        working-directory: cross-platform
+      - run: npm test && npm run prepare:assets && npm run package:web
+        working-directory: cross-platform
+      - uses: actions/upload-artifact@v7
+        with:
+          name: web-package
+          path: cross-platform/release/*.zip
+          if-no-files-found: error
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-24.04, platform: linux}
+          - {os: macos-15, platform: darwin}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: {node-version: '24', cache: npm, cache-dependency-path: cross-platform/package-lock.json}
+      - run: npm ci --no-audit --no-fund
+        working-directory: cross-platform
+      - run: npm run package:desktop
+        working-directory: cross-platform
+      - name: Linux native app smoke test
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb ./cross-platform/release/world-speace_Linux_x64_v1.5.1.deb
+          xvfb-run -a /opt/world-speace/world-speace --smoke-test --smoke-report="$PWD/cross-platform/build/verification/linux.json"
+      - name: macOS native app smoke test
+        if: matrix.platform == 'darwin'
+        run: |
+          arch=$(node -p process.arch)
+          "cross-platform/build/desktop/world speace-darwin-$arch/world speace.app/Contents/MacOS/world-speace" --smoke-test --smoke-report="$PWD/cross-platform/build/verification/macos.json"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: desktop-${{ matrix.platform }}
+          path: cross-platform/release/*
+          if-no-files-found: error
+          compression-level: 0
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: verification-${{ matrix.platform }}
+          path: cross-platform/build/verification/*
+          if-no-files-found: warn
+  ios:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: {node-version: '24'}
+      - run: node tools/prepare.mjs
+        working-directory: cross-platform
+      - name: Compile iOS device app to the signing stage
+        run: bash cross-platform/ios/build.sh
+      - name: Test actual iOS Simulator runtime
+        run: bash cross-platform/ios/smoke-simulator.sh
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ios-unsigned
+          path: cross-platform/release/*.ipa
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: verification-ios
+          path: cross-platform/build/verification/*
+          if-no-files-found: warn

@@ -1,0 +1,12 @@
+/node_modules/
+/build/
+/release/
+/desktop/app/www/
+/ios/WorldSpeace/www/
+*.xcuserstate
+xcuserdata/
+DerivedData/
+*.p12
+*.mobileprovision
+*.ipa
+.DS_Store
