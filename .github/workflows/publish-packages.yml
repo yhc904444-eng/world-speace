@@ -1,0 +1,78 @@
+name: Publish verified packages
+on:
+  workflow_dispatch:
+    inputs:
+      build_run:
+        description: Successful Cross-platform packages run ID
+        required: true
+        type: string
+      tag:
+        description: Existing draft release tag
+        required: true
+        default: v1.5.1
+        type: string
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPOSITORY: ${{ github.repository }}
+      BUILD_RUN: ${{ inputs.build_run }}
+      RELEASE_TAG: ${{ inputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.tag }}
+      - name: Verify build and release match
+        shell: bash
+        run: |
+          test "$REPOSITORY" = yhc904444-eng/world-speace
+          test "$RELEASE_TAG" = v1.5.1
+          [[ "$BUILD_RUN" =~ ^[0-9]+$ ]]
+          gh api "repos/$REPOSITORY/actions/runs/$BUILD_RUN" > build-run.json
+          python3 -c 'import json; d=json.load(open("build-run.json")); assert d["conclusion"]=="success"; assert d["name"]=="Cross-platform packages"'
+          build_sha=$(python3 -c 'import json; print(json.load(open("build-run.json"))["head_sha"])')
+          git diff --exit-code "$build_sha" "$RELEASE_TAG" -- android/app cross-platform/desktop cross-platform/ios cross-platform/tools cross-platform/web cross-platform/tests cross-platform/package.json cross-platform/package-lock.json
+          test "$(gh release view "$RELEASE_TAG" --repo "$REPOSITORY" --json isDraft --jq .isDraft)" = true
+      - name: Download verified native packages inside GitHub
+        run: |
+          gh run download "$BUILD_RUN" --repo "$REPOSITORY" --name desktop-darwin --name desktop-linux --name ios-unsigned --name web-package --dir downloaded
+          gh run download "$BUILD_RUN" --repo "$REPOSITORY" --name verification-darwin --name verification-linux --name verification-ios --dir verification
+      - name: Audit packages and prepare checksums
+        run: |
+          python3 tools/audit-release.py
+          gh release upload "$RELEASE_TAG" publish/* --repo "$REPOSITORY"
+          gh release download "$RELEASE_TAG" --repo "$REPOSITORY" --dir complete
+          (cd complete && sha256sum * | sort -k2) > SHA256SUMS.txt
+          gh release upload "$RELEASE_TAG" SHA256SUMS.txt --repo "$REPOSITORY"
+      - name: Verify server digests and publish together
+        run: |
+          gh api "repos/$REPOSITORY/releases/tags/$RELEASE_TAG" > remote-release.json
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          remote=json.load(open('remote-release.json'))
+          assert remote['draft']
+          for asset in remote['assets']:
+              local=pathlib.Path('SHA256SUMS.txt') if asset['name']=='SHA256SUMS.txt' else pathlib.Path('complete')/asset['name']
+              digest=hashlib.sha256(local.read_bytes()).hexdigest()
+              assert asset['digest']=='sha256:'+digest, asset['name']
+              print(asset['name'],digest)
+          assert len(remote['assets'])==19,len(remote['assets'])
+          PY
+          gh release edit "$RELEASE_TAG" --repo "$REPOSITORY" --draft=false --latest
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: publication-verification
+          path: |
+            SHA256SUMS.txt
+            remote-release.json
+            publish/world-speace_v1.5.1-platforms.json
+            verification/**/*.json
+            verification/**/*.png
+          if-no-files-found: warn

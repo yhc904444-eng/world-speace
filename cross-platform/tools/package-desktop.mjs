@@ -4,6 +4,7 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {extractFile,listPackage} from '@electron/asar';
 import {root,version,prepare} from './prepare.mjs';
+import {publicPermissions} from './public-permissions.mjs';
 const platform=process.platform;
 if(!['darwin','linux'].includes(platform))throw new Error('Build desktop packages on the matching macOS/Linux host.');
 const out=path.join(root,'release');fs.mkdirSync(out,{recursive:true});
@@ -30,10 +31,11 @@ for(const arch of ['x64','arm64']){
     if(!fs.existsSync(path.join(dmgRoot,'Applications')))fs.symlinkSync('/Applications',path.join(dmgRoot,'Applications'));
     execFileSync('hdiutil',['create','-volname','world speace','-srcfolder',dmgRoot,'-ov','-format','UDZO',path.join(out,`world-speace_macOS_${arch}_v${version}.dmg`)],{stdio:'inherit'});
   }else{
-    const binary=path.join(directory,'world-speace');fs.chmodSync(binary,0o755);
+    const binary=path.join(directory,'world-speace');fs.chmodSync(binary,0o755);publicPermissions(directory);
     execFileSync('tar',['-czf',path.join(out,`world-speace_Linux_${arch}_v${version}.tar.gz`),'-C',path.dirname(directory),path.basename(directory)]);
     const deb=path.join(root,'build/deb-'+arch),control=path.join(deb,'DEBIAN');fs.mkdirSync(control,{recursive:true});
     const appRoot=path.join(deb,'opt/world-speace');fs.mkdirSync(path.dirname(appRoot),{recursive:true});fs.cpSync(directory,appRoot,{recursive:true,verbatimSymlinks:true});
+    publicPermissions(appRoot);
     const sandbox=path.join(appRoot,'chrome-sandbox');if(fs.existsSync(sandbox))fs.chmodSync(sandbox,0o4755);
     fs.writeFileSync(path.join(control,'control'),`Package: world-speace\nVersion: ${version}\nSection: education\nPriority: optional\nArchitecture: ${arch==='x64'?'amd64':'arm64'}\nMaintainer: yhc904444-eng <yhc904444-eng@users.noreply.github.com>\nDepends: libgtk-3-0, libnss3, libasound2 | libasound2t64, libgbm1, libxss1, libatk-bridge2.0-0, libdrm2\nDescription: Offline vocabulary learning with FSRS-6 and ECDICT\n`);
     fs.mkdirSync(path.join(deb,'usr/bin'),{recursive:true});fs.symlinkSync('/opt/world-speace/world-speace',path.join(deb,'usr/bin/world-speace'));
